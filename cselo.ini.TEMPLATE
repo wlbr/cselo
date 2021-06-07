@@ -1,0 +1,13 @@
+; CSELO Config file
+[PostgreSQL]
+  Host = yourhost    ; localhost, ip or hostname
+  Port = yourport    ; default is 5432
+  Database = yourdbname
+  User     = yourdbuser
+  Password = yourdbuser
+[InfluxDB]
+  Host = yourhost    ; localhost, ip or hostname
+  Port = yourport    ; default is 8086
+  Token = youcangetyourtokenintheinfluxdbui
+  Bucket = yourbucket
+  Org = yourorg"
