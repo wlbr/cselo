@@ -129,11 +129,11 @@ func (s *PostgresSink) HandleAssistEvent(e *events.Assist) {
 }
 
 /*
- select initialname,count(actor) as flashes, count(case when ownteam=true then 1 end) as teamflash, round(cast(count(case when ownteam=true then 1 end) as float)/count(actor) * 1000)/10 as "tf%"  from blindings
+select initialname,count(case when victimtype='enemy' then 1 end) as enemyflashes, count(case when victimtype='teammate' then 1 end) as teammateflash, count(case when victimtype='self' then 1 end) as selfflash   from blindings
 left join players on actor=players.id
 WHERE timestmp > current_date - interval '30' day
 group by initialname
-order by round(cast(count(case when ownteam=true then 1 end) as float)/count(actor) * 1000)/10 DESC;
+order by count(case when victimtype='enemy' then 1 end) DESC
 */
 func (s *PostgresSink) HandleBlindedEvent(e *events.Blinded) {
 	log.Info("Writing blind event to PostgreSQL database: %+v", e)
@@ -141,9 +141,19 @@ func (s *PostgresSink) HandleBlindedEvent(e *events.Blinded) {
 	subject := s.GetOrStorePlayerbySteamID(e.Subject)
 	object := s.GetOrStorePlayerbySteamID(e.Object)
 
+	t := "enemy"
+	switch {
+	case e.SelfFlashed():
+		t = "self"
+		break
+	case e.TeammateFlashed():
+		t = "teammate"
+		break
+	}
+
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO blindings (actor, victim, duration,ownteam, timestmp) VALUES ($1, $2, $3, $4, $5)",
-		subject.ID, object.ID, e.Duration, e.OwnTeam(), e.Time)
+		"INSERT INTO blindings (actor, victim, duration,victimtype, timestmp) VALUES ($1, $2, $3, $4, $5)",
+		subject.ID, object.ID, e.Duration, t, e.Time)
 	if err != nil {
 		log.Error("Cannot store BLINDING in PostgresQL database: %v", err)
 	}

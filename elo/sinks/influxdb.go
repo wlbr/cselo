@@ -119,15 +119,20 @@ func (s *InfluxSink) HandleAssistEvent(e *events.Assist) {
 func (s *InfluxSink) HandleBlindedEvent(e *events.Blinded) {
 	log.Info("Writing blind event to InfluxDB: %+v", e)
 
-	t := "false"
-	if e.OwnTeam() {
-		t = "true"
+	t := "enemy"
+	switch {
+	case e.SelfFlashed():
+		t = "self"
+		break
+	case e.TeammateFlashed():
+		t = "teammate"
+		break
 	}
 
 	p := influxdb2.NewPointWithMeasurement("blinds").
 		AddTag("actor", e.Subject.Name).
 		AddTag("victim", e.Object.Name).
-		AddTag("ownteam", t).
+		AddTag("victimtype", t).
 		AddField("score", 1).
 		SetTime(e.Time)
 	s.w.WritePoint(p)

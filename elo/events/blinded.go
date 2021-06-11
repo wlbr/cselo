@@ -51,8 +51,29 @@ func (e *Blinded) String() string {
 	return s
 }
 
-func (e *Blinded) OwnTeam() bool {
+func (e *Blinded) OwnTeamFlashed() bool {
 	if e.subjectTeam == e.objectTeam {
+		return true
+	}
+	return false
+}
+
+func (e *Blinded) EnemyFlashed() bool {
+	if e.subjectTeam != e.objectTeam {
+		return true
+	}
+	return false
+}
+
+func (e *Blinded) TeammateFlashed() bool {
+	if e.subjectTeam == e.objectTeam && e.Subject.SteamID != e.Object.SteamID {
+		return true
+	}
+	return false
+}
+
+func (e *Blinded) SelfFlashed() bool {
+	if e.Subject.SteamID == e.Object.SteamID {
 		return true
 	}
 	return false

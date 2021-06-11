@@ -99,7 +99,7 @@ CREATE TABLE blindings (
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
     duration float,
-    ownteam boolean,
+    victimtype varchar(10),
     timestmp timestamp
 );
 
