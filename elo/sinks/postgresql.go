@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cs-elo/elo"
 	"github.com/wlbr/cs-elo/elo/events"
-
-	"github.com/jackc/pgx/v4"
 )
 
 type PostgresSink struct {
@@ -96,7 +95,7 @@ func (s *PostgresSink) GetOrStorePlayerbySteamID(p *elo.Player) *elo.Player {
 /*
 select initialname,count(actor) as kills,count(case when headshot=true then 1 end) as headshot, round(cast(count(case when headshot=true then 1 end) as float)/count(actor) * 1000)/10 as "hs%"  from kills
 left join players on actor=players.id
-WHERE timestmp > current_date - interval '30' day
+WHERE timestmp > current_date - interval '2' day
 group by initialname
 order by count(actor) DESC;
 */
@@ -131,9 +130,9 @@ func (s *PostgresSink) HandleAssistEvent(e *events.Assist) {
 /*
 select initialname,count(case when victimtype='enemy' then 1 end) as enemyflashes, count(case when victimtype='teammate' then 1 end) as teammateflash, count(case when victimtype='self' then 1 end) as selfflash   from blindings
 left join players on actor=players.id
-WHERE timestmp > current_date - interval '30' day
+WHERE timestmp > current_date - interval '2' day
 group by initialname
-order by count(case when victimtype='enemy' then 1 end) DESC
+order by count(case when victimtype='enemy' then 1 end) DESC;
 */
 func (s *PostgresSink) HandleBlindedEvent(e *events.Blinded) {
 	log.Info("Writing blind event to PostgreSQL database: %+v", e)
@@ -225,6 +224,17 @@ func (s *PostgresSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
 		log.Error("Cannot store RESCUE in PostgresQL database: %v", err)
 	}
 }
+
+func (s *PostgresSink) HandleGameOverEvent(e *events.GameOver) {
+	log.Info("Writing game over event to PostgreSQL database: %+v", e)
+	_, err := s.db.Exec(context.Background(),
+		"INSERT INTO matches (gamemode, mapgroup, mapfullname, mapname, score, duration, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.Score, e.Duration.String(), e.Time)
+	if err != nil {
+		log.Error("Cannot store GAMEOVER in PostgresQL database: %v", err)
+	}
+}
+
 func (s *PostgresSink) HandleRoundStartEvent(e *events.RoundStart) {}
 func (s *PostgresSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
 func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {}

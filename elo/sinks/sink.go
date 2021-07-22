@@ -15,4 +15,5 @@ type Sink interface {
 	HandleRoundEndEvent(e *events.RoundEnd)
 	HandleMatchStartEvent(e *events.MatchStart)
 	HandleMatchEndEvent(e *events.MatchEnd)
+	HandleGameOverEvent(e *events.GameOver)
 }

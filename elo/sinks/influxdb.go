@@ -192,3 +192,4 @@ func (s *InfluxSink) HandleRoundStartEvent(e *events.RoundStart) {}
 func (s *InfluxSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
 func (s *InfluxSink) HandleMatchStartEvent(e *events.MatchStart) {}
 func (s *InfluxSink) HandleMatchEndEvent(e *events.MatchEnd)     {}
+func (s *InfluxSink) HandleGameOverEvent(e *events.GameOver)     {}

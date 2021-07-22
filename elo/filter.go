@@ -1,6 +1,10 @@
 package elo
 
-import "regexp"
+import (
+	"regexp"
+
+	"github.com/wlbr/commons/log"
+)
 
 type Filter interface {
 	String() string
@@ -20,6 +24,7 @@ func (f *AllBotsFilter) String() string {
 
 func (f *AllBotsFilter) Test(message string) bool {
 	if allbotsrex.MatchString(message) {
+		log.Info("AllBotsFilter: Filtered message '%s'", message)
 		return true
 	}
 	return false

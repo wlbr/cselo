@@ -99,10 +99,17 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, server string, t time.Time, m string)
 		}
 		return
 	}
+	if e := events.NewGameOverEvent(srv, t, m); e != nil {
+		for _, s := range p.sinks {
+			s.HandleGameOverEvent(e)
+		}
+		//return
+	}
 	if e := events.NewMatchEndEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchEndEvent(e)
 		}
 		return
 	}
+
 }
