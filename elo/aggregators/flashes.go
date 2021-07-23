@@ -12,13 +12,18 @@ type Interval struct {
 }
 
 type flashesPerPlayer struct {
-	actor               *elo.Player
-	teamflashes         int
-	enemyflashes        int
-	teamflashpercentage float32
+	actor             *elo.Player
+	enemyflashes      int
+	teammateflashes   int
+	selfflashed       int
+	enemyflashPrct    float32
+	teammateflashPrct float32
+	selfflashPrct     float32
+	throws            int
 }
 
 type Flashes struct {
 	timespan *Interval
 	stats    []*flashesPerPlayer
 }
+

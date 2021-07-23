@@ -118,3 +118,20 @@ CREATE TABLE grenadethrows (
 
 -- ALTER TABLE grenadethrows
 --  OWNER TO cseloapp;
+
+
+DROP TABLE IF EXISTS matches CASCADE;
+
+CREATE TABLE matches (
+    id serial NOT NULL primary key,
+    gamemode varchar(20),
+    mapgroup varchar(40),
+    mapfullname varchar(40),
+    mapname varchar(20),
+    score varchar(20),
+    duration varchar(40),  --interval(6),
+    timestmp timestamp
+);
+
+-- ALTER TABLE matches
+--  OWNER TO cseloapp;

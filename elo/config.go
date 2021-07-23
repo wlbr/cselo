@@ -120,7 +120,7 @@ func (cfg *Config) Initialize(version string, buildtimestamp string) *Config {
 	}
 	if cfg.ConfigFileName != "" {
 		if err := gcfg.ReadFileInto(cfg, cfg.ConfigFileName); err != nil {
-			log.Error("Error reading ini-file: ", err)
+			log.Error("Error reading ini-file: %s", err)
 		}
 	}
 	cfg.CommonConfig.Initialize(version, buildtimestamp)
