@@ -9,13 +9,14 @@ clean:
 	@echo Running clean job...
 	rm -f coverage.txt
 	rm -rf bin/
-	rm -f main eloudp
+	rm -f main eloudp csscores cselo.tgz
+
 
 build: #generate
 	@echo Running build job...
 	mkdir -p bin/linux bin/windows bin/mac
-	# GOOS=linux go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
-	# GOOS=windows go build  -ldflags "$(LINKERFLAGS)" -o bin/windows ./...
+	GOOS=linux go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
+	GOOS=windows go build  -ldflags "$(LINKERFLAGS)" -o bin/windows ./...
 	GOOS=darwin go build  -ldflags "$(LINKERFLAGS)" -o bin/mac ./...
 
 run:
@@ -29,11 +30,9 @@ coverage: test
 	@echo Running coverage job...
 	go tool cover -html=coverage.txt
 
-deploy: clean
-	mkdir -p bin/linux
-	GOOS=linux go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
-	rsync -v --progress bin/linux/* wlbr:~/bin/
-
+deploy:
+	$(eval VER=$(shell sh -c "bin/linux/eloudp -version |cut -f 2 -d ' '"))
+	tar -zcpv -s /bin/cselo-$(VER)/ -f cselo.tgz bin/*
 
 initelodb: resetdb recreatetables
 
