@@ -129,7 +129,7 @@ CREATE TABLE matches (
     mapfullname varchar(40),
     mapname varchar(20),
     score varchar(20),
-    duration varchar(40),  --interval(6),
+    duration interval(6),
     timestmp timestamp
 );
 

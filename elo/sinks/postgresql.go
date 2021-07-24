@@ -229,7 +229,7 @@ func (s *PostgresSink) HandleGameOverEvent(e *events.GameOver) {
 	log.Info("Writing game over event to PostgreSQL database: %+v", e)
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO matches (gamemode, mapgroup, mapfullname, mapname, score, duration, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.Score, e.Duration.String(), e.Time)
+		e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.Score, e.Duration, e.Time)
 	if err != nil {
 		log.Error("Cannot store GAMEOVER in PostgresQL database: %v", err)
 	}
