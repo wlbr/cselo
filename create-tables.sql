@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS kills CASCADE;
 
 CREATE TABLE kills (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
     headshot boolean,
@@ -30,6 +31,7 @@ DROP TABLE IF EXISTS assists CASCADE;
 
 CREATE TABLE assists (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
     timestmp timestamp
@@ -43,6 +45,7 @@ DROP TABLE IF EXISTS plantings CASCADE;
 
 CREATE TABLE plantings (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     timestmp timestamp
 );
@@ -55,6 +58,7 @@ DROP TABLE IF EXISTS rescues CASCADE;
 
 CREATE TABLE rescues (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     timestmp timestamp
 );
@@ -71,6 +75,7 @@ DROP TABLE IF EXISTS bombings CASCADE;
 
 CREATE TABLE bombings (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     timestmp timestamp
 );
@@ -83,6 +88,7 @@ DROP TABLE IF EXISTS defuses CASCADE;
 
 CREATE TABLE defuses (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
     timestmp timestamp
@@ -96,6 +102,7 @@ DROP TABLE IF EXISTS blindings CASCADE;
 
 CREATE TABLE blindings (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
     duration float,
@@ -111,6 +118,7 @@ DROP TABLE IF EXISTS grenadethrows CASCADE;
 
 CREATE TABLE grenadethrows (
     id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     grenadetype varchar(20),
     timestmp timestamp
@@ -127,7 +135,7 @@ CREATE TABLE matches (
     gamemode varchar(20),
     mapgroup varchar(40),
     mapfullname varchar(80),
-    mapname varchar(20),
+    mapname varchar(40),
     scorea int,
     scoreb int,
     duration interval(6),
@@ -135,6 +143,7 @@ CREATE TABLE matches (
     matchend timestamp,
     timestmp timestamp
 );
+
 
 -- ALTER TABLE matches
 --  OWNER TO cseloapp;

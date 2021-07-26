@@ -106,8 +106,8 @@ func (s *PostgresSink) HandleKillEvent(e *events.Kill) {
 	object := s.GetOrStorePlayerbySteamID(e.Object)
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO kills (actor, victim, headshot, weapon, timestmp) VALUES ($1, $2, $3, $4, $5)",
-		subject.ID, object.ID, e.Headshot, e.Weapon, e.Time)
+		"INSERT INTO kills (match, actor, victim, headshot, weapon, timestmp) VALUES ($1, $2, $3, $4, $5, $6)",
+		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Headshot, e.Weapon, e.Time)
 	if err != nil {
 		log.Error("Cannot store KILL in PostgresQL database: %v", err)
 	}
@@ -120,8 +120,8 @@ func (s *PostgresSink) HandleAssistEvent(e *events.Assist) {
 	object := s.GetOrStorePlayerbySteamID(e.Object)
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO assists (actor, victim, timestmp) VALUES ($1, $2, $3)",
-		subject.ID, object.ID, e.Time)
+		"INSERT INTO assists (match, actor, victim, timestmp) VALUES ($1, $2, $3, $4)",
+		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Time)
 	if err != nil {
 		log.Error("Cannot store ASSIST in PostgresQL database: %v", err)
 	}
@@ -151,8 +151,8 @@ func (s *PostgresSink) HandleBlindedEvent(e *events.Blinded) {
 	}
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO blindings (actor, victim, duration,victimtype, timestmp) VALUES ($1, $2, $3, $4, $5)",
-		subject.ID, object.ID, e.Duration, t, e.Time)
+		"INSERT INTO blindings (match, actor, victim, duration,victimtype, timestmp) VALUES ($1, $2, $3, $4, $5, $6)",
+		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Duration, t, e.Time)
 	if err != nil {
 		log.Error("Cannot store BLINDING in PostgresQL database: %v", err)
 	}
@@ -164,8 +164,8 @@ func (s *PostgresSink) HandleGrenadeEvent(e *events.Grenade) {
 	subject := s.GetOrStorePlayerbySteamID(e.Subject)
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO grenadethrows (actor, grenadetype, timestmp) VALUES ($1, $2, $3)",
-		subject.ID, e.GrenadeType, e.Time)
+		"INSERT INTO grenadethrows (match, actor, grenadetype, timestmp) VALUES ($1, $2, $3, $4)",
+		e.Server.CurrentMatch.ID, subject.ID, e.GrenadeType, e.Time)
 	if err != nil {
 		log.Error("Cannot store GRENADETRHOW in PostgresQL database: %v", err)
 	}
@@ -177,8 +177,8 @@ func (s *PostgresSink) HandlePlantedEvent(e *events.Planted) {
 	subject := s.GetOrStorePlayerbySteamID(e.Subject)
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO plantings (actor, timestmp) VALUES ($1, $2)",
-		subject.ID, e.Time)
+		"INSERT INTO plantings (match, actor, timestmp) VALUES ($1, $2, $3)",
+		e.Server.CurrentMatch.ID, subject.ID, e.Time)
 	if err != nil {
 		log.Error("Cannot store PLANTING in PostgresQL database: %v", err)
 	}
@@ -190,8 +190,8 @@ func (s *PostgresSink) HandleDefuseEvent(e *events.Defuse) {
 	if e.Subject != nil {
 		subject := s.GetOrStorePlayerbySteamID(e.Subject)
 		_, err := s.db.Exec(context.Background(),
-			"INSERT INTO defuses (actor, timestmp) VALUES ($1, $2)",
-			subject.ID, e.Time)
+			"INSERT INTO defuses (match, actor, timestmp) VALUES ($1, $2, $3)",
+			e.Server.CurrentMatch.ID, subject.ID, e.Time)
 		if err != nil {
 			log.Error("Cannot store DEFUSE in PostgresQL database: %v", err)
 		}
@@ -204,8 +204,8 @@ func (s *PostgresSink) HandleBombedEvent(e *events.Bombed) {
 	if e.Subject != nil {
 		subject := s.GetOrStorePlayerbySteamID(e.Subject)
 		_, err := s.db.Exec(context.Background(),
-			"INSERT INTO bombings (actor, timestmp) VALUES ($1, $2)",
-			subject.ID, e.Time)
+			"INSERT INTO bombings (match, actor, timestmp) VALUES ($1, $2, $3)",
+			e.Server.CurrentMatch.ID, subject.ID, e.Time)
 		if err != nil {
 			log.Error("Cannot store BOMBING in PostgresQL database: %v", err)
 		}
@@ -218,8 +218,8 @@ func (s *PostgresSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
 	subject := s.GetOrStorePlayerbySteamID(e.Subject)
 
 	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO rescues (actor, timestmp) VALUES ($1, $2)",
-		subject.ID, e.Time)
+		"INSERT INTO rescues (match, actor, timestmp) VALUES ($1, $2, $3)",
+		e.Server.CurrentMatch.ID, subject.ID, e.Time)
 	if err != nil {
 		log.Error("Cannot store RESCUE in PostgresQL database: %v", err)
 	}
@@ -235,7 +235,7 @@ func (s *PostgresSink) HandleMatchEndEvent(e *events.MatchEnd) {
 		WHERE id=$1`,
 		m.ID, m.GameMode, m.MapGroup, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time)
 	if err != nil {
-		log.Error("Cannot store MATCHEND in PostgresQL database: %v", err)
+		log.Error("Cannot store MATCHEND in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
 }
 
@@ -248,7 +248,7 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 		e.MapFullName, e.MapName, e.Time, e.Time).Scan(&id)
 	e.Server.CurrentMatch.ID = id
 	if err != nil {
-		log.Error("Cannot store MATCHSTART in PostgresQL database: %v", err)
+		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
 }
 
