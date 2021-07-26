@@ -19,12 +19,17 @@ type Round struct {
 }
 
 type Match struct {
-	Start      time.Time
-	End        time.Time
-	Players    []Player
-	WinnerTeam string
-	CtScore    int
-	TScore     int
+	ID          int64
+	Server      *Server
+	GameMode    string
+	MapGroup    string
+	MapFullName string
+	MapName     string
+	ScoreA      int64
+	ScoreB      int64
+	Start       time.Time
+	End         time.Time
+	Duration    time.Duration
 }
 
 type Player struct {

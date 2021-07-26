@@ -126,10 +126,13 @@ CREATE TABLE matches (
     id serial NOT NULL primary key,
     gamemode varchar(20),
     mapgroup varchar(40),
-    mapfullname varchar(40),
+    mapfullname varchar(80),
     mapname varchar(20),
-    score varchar(20),
+    scorea int,
+    scoreb int,
     duration interval(6),
+    matchstart timestamp,
+    matchend timestamp,
     timestmp timestamp
 );
 

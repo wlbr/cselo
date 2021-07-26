@@ -20,7 +20,7 @@ build: #generate
 	GOOS=darwin go build  -ldflags "$(LINKERFLAGS)" -o bin/mac ./...
 
 run:
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo.ini -cslog data/short.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo.ini -cslog data/latest.log
 
 test: #generate
 	@echo Running test job...

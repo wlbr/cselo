@@ -105,6 +105,7 @@ func (em *fileEmitter) Loop() {
 
 	scanner := bufio.NewScanner(f)
 	lineno := 0
+	server := &Server{IP: "fromFile"}
 	for scanner.Scan() {
 		lineno++
 		buf := scanner.Text()
@@ -118,7 +119,7 @@ func (em *fileEmitter) Loop() {
 			}
 			if !filter(em, m) {
 				for _, p := range em.procs {
-					p.Dispatch(em, "fromFILE", t, m)
+					p.Dispatch(em, server, t, m)
 				}
 			}
 		}
@@ -175,6 +176,7 @@ func (em *udpEmitter) GetFilters() []Filter {
 func (em *udpEmitter) Loop() {
 	const protocol = "udp"
 	port := em.config.Elo.Port
+	server := &Server{IP: "fromUDP"}
 
 	//Build the address
 	udpAddr, err := net.ResolveUDPAddr(protocol, ":"+port)
@@ -197,7 +199,8 @@ func (em *udpEmitter) Loop() {
 	//the event loop
 	for {
 		buf := make([]byte, 1024)
-		n, addr, err := pc.ReadFromUDP(buf)
+		//n, addr, err := pc.ReadFromUDP(buf)
+		n, _, err := pc.ReadFromUDP(buf)
 		if err != nil {
 			log.Error("Error during receiving: %v", err)
 			continue
@@ -214,7 +217,7 @@ func (em *udpEmitter) Loop() {
 				}
 				if !filter(em, m) {
 					for _, p := range em.procs {
-						p.Dispatch(em, addr.String(), t, m)
+						p.Dispatch(em, server, t, m)
 					}
 				}
 			}

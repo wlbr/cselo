@@ -27,12 +27,12 @@ func (p *CsgoLog) AddSink(s sinks.Sink) {
 	p.sinks = append(p.sinks, s)
 }
 
-func (p *CsgoLog) Dispatch(em elo.Emitter, server string, t time.Time, m string) {
-	srv, ok := p.servers[server]
-	if ok {
-		srv = &elo.Server{IP: server}
-		p.servers[server] = srv
-	}
+func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m string) {
+	// srv, ok := p.servers[server]
+	// if ok {
+	// 	srv = &elo.Server{IP: server}
+	// 	p.servers[server] = srv
+	// }
 	if e := events.NewKillEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {
 			s.HandleKillEvent(e)
@@ -98,12 +98,6 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, server string, t time.Time, m string)
 			s.HandleMatchStartEvent(e)
 		}
 		return
-	}
-	if e := events.NewGameOverEvent(srv, t, m); e != nil {
-		for _, s := range p.sinks {
-			s.HandleGameOverEvent(e)
-		}
-		//return
 	}
 	if e := events.NewMatchEndEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {

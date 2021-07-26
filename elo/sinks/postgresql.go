@@ -225,17 +225,32 @@ func (s *PostgresSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
 	}
 }
 
-func (s *PostgresSink) HandleGameOverEvent(e *events.GameOver) {
+// "INSERT INTO matches (gamemode, mapgroup, mapfullname, mapname, scorea, scoreb, duration, matchend, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+// e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Duration, e.MatchEnd, e.Time)
+func (s *PostgresSink) HandleMatchEndEvent(e *events.MatchEnd) {
 	log.Info("Writing game over event to PostgreSQL database: %+v", e)
-	_, err := s.db.Exec(context.Background(),
-		"INSERT INTO matches (gamemode, mapgroup, mapfullname, mapname, score, duration, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.Score, e.Duration, e.Time)
+	m := e.Server.CurrentMatch
+	_, err := s.db.Exec(context.Background(), `UPDATE matches
+		SET gamemode=$2, mapgroup=$3, mapfullname=$4, mapname=$5, scorea=$6, scoreb=$7, duration=$8, matchend=$9, timestmp=$10
+		WHERE id=$1`,
+		m.ID, m.GameMode, m.MapGroup, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time)
 	if err != nil {
-		log.Error("Cannot store GAMEOVER in PostgresQL database: %v", err)
+		log.Error("Cannot store MATCHEND in PostgresQL database: %v", err)
+	}
+}
+
+func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
+	log.Info("Writing game start event to PostgreSQL database: %+v", e)
+	var id int64
+	err := s.db.QueryRow(context.Background(),
+		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp) VALUES ($1, $2, $3, $4)
+		RETURNING id`,
+		e.MapFullName, e.MapName, e.Time, e.Time).Scan(&id)
+	e.Server.CurrentMatch.ID = id
+	if err != nil {
+		log.Error("Cannot store MATCHSTART in PostgresQL database: %v", err)
 	}
 }
 
 func (s *PostgresSink) HandleRoundStartEvent(e *events.RoundStart) {}
 func (s *PostgresSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
-func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {}
-func (s *PostgresSink) HandleMatchEndEvent(e *events.MatchEnd)     {}

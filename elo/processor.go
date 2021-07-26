@@ -5,5 +5,5 @@ import (
 )
 
 type Processor interface {
-	Dispatch(em Emitter, s string, t time.Time, m string)
+	Dispatch(em Emitter, s *Server, t time.Time, m string)
 }
