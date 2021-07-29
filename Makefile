@@ -32,7 +32,8 @@ coverage: test
 
 deploy:
 	$(eval VER=$(shell sh -c "bin/linux/eloudp -version |cut -f 2 -d ' '"))
-	tar -zcpv --transform=s/bin/cselo-$(VER)/g -f cselo-$(VER).tgz bin/*
+	tar -zcpv -s /bin/cselo-$(VER)/ -f cselo-$(VER).tgz bin/*   # OSX
+	#tar -zcpv --transform=s/bin/cselo-$(VER)/g -f cselo-$(VER).tgz bin/* # Linux
 
 initelodb: resetdb recreatetables
 
