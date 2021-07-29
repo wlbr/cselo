@@ -52,21 +52,6 @@ func main() {
 	elapsed := end.Sub(start)
 	fmt.Printf("Processing took %s\n", elapsed)
 
-	// for _, p := range emitter.GetProcessor() {
-	// 	for player, ks := range p.GetKillStats() {
-	// 		fmt.Printf("\nPLAYER %s killed:	 \n", player)
-	// 		var kills []*playerkill
-	// 		for victim, count := range ks.Victims {
-	// 			kills = append(kills, &playerkill{player: victim.Name, count: count})
-	// 		}
-	// 		sort.Sort(ByCount(kills))
-	// 		for _, p := range kills {
-	// 			fmt.Printf("\t%s: %d \n", p.player, p.count)
-	// 		}
-
-	// 	}
-	// }
-
 	fmt.Printf("Processing took %s\n", elapsed)
 }
 
