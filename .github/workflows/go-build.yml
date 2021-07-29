@@ -27,10 +27,11 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
-          security create-keychain -p my.build.keychain.pw my.build.keychain security default-keychain -s my.build.keychain
-          security unlock-keychain -p my.build.keychain.pw my.build.keychain
-          security import certificate.p12 -k my.build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k my.build.keychain.pw my.build.keychain
+          security create-keychain -p build.keychain.pw build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p build.keychain.pw build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain.pw build.keychain
           /usr/bin/codesign --force -s 30F3E8CE4EB52DCF22BCFDF756EC21B8673EFBBC ./bin/mac/* -v
       - name: Test
         run: make test
