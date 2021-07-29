@@ -12,10 +12,17 @@ type Server struct {
 }
 
 type Round struct {
-	Start      time.Time
-	End        time.Time
-	Players    []Player
-	WinnerTeam string
+	ID       int64
+	Match    *Match
+	Duration time.Duration
+	Start    time.Time
+	End      time.Time
+}
+
+func (r *Round) CalcDuration() {
+	if !r.End.IsZero() && !r.Start.IsZero() {
+		r.Duration = r.End.Sub(r.Start)
+	}
 }
 
 type Match struct {
