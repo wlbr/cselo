@@ -39,7 +39,6 @@ jobs:
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain.pw build.keychain
           /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/mac/*
-#         notarize
           hdiutil create -fs HFS+ -ov -format UDZO -srcfolder ./bin/mac/ -volname cselo cselo-mac-${{ steps.vars.outputs.tag }}.dmg
           xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_ID"   --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file cselo-mac-${{ steps.vars.outputs.tag }}.dmg
           sleep 150
