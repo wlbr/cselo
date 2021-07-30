@@ -40,13 +40,13 @@ jobs:
       - name: Notarize OSX executable
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          MACOS_DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
+          MACOS_DEVELOPER_EMAL: ${{ secrets.MACOS_DEVELOPER_EMAIL }}
           MACOS_DEVELOPER_TEAM: ${{ secrets.MACOS_DEVELOPER_TEAM }}
           MACOS_ALTOOL_APPPASSWD: ${{ secrets.MACOS_ALTOOL_APPPASSWD }}
         run: |
           mkdir -p release
           hdiutil create -fs HFS+ -ov -format UDZO -srcfolder ./bin/mac/ -volname cselo release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
-          xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_ID" --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
+          xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_EMAIL" --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
           sleep 150
           stapler staple release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
       - name: Deploy
