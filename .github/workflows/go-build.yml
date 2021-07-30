@@ -23,14 +23,12 @@ jobs:
         run: make build
       - name: Test
         run: make test
-      - name: Codesign executable
+      - name: Codesign & notarize OSX executable
         if: startsWith(github.ref, 'refs/tags/')
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
-          MACOS_DEVELOPER_TEAM: ${{ secrets.MACOS_DEVELOPER_TEAM }}
-          MACOS_ALTOOL_APPPASSWD: ${{ secrets.MACOS_ALTOOL_APPPASSWD }}
         run: |
           echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
           security create-keychain -p build.keychain.pw build.keychain
@@ -39,10 +37,18 @@ jobs:
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain.pw build.keychain
           /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/mac/*
-          hdiutil create -fs HFS+ -ov -format UDZO -srcfolder ./bin/mac/ -volname cselo cselo-mac-${{ steps.vars.outputs.tag }}.dmg
-          xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_ID"   --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file cselo-mac-${{ steps.vars.outputs.tag }}.dmg
+      - name: Notarize OSX executable
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          MACOS_DEVELOPER_ID: ${{ secrets.MACOS_DEVELOPER_ID }}
+          MACOS_DEVELOPER_TEAM: ${{ secrets.MACOS_DEVELOPER_TEAM }}
+          MACOS_ALTOOL_APPPASSWD: ${{ secrets.MACOS_ALTOOL_APPPASSWD }}
+        run: |
+          mkdir -p release
+          hdiutil create -fs HFS+ -ov -format UDZO -srcfolder ./bin/mac/ -volname cselo release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
+          xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_ID" --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
           sleep 150
-          stapler staple cselo-mac-${{ steps.vars.outputs.tag }}.dmg
+          stapler staple release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
       - name: Deploy
         if: startsWith(github.ref, 'refs/tags/')
         run: make deploy
@@ -51,9 +57,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            cselo-linux-${{ steps.vars.outputs.tag }}.tgz
-            cselo-mac-${{ steps.vars.outputs.tag }}.dmg
-            cselo-win-${{ steps.vars.outputs.tag }}.zip
+            release/cselo-linux-${{ steps.vars.outputs.tag }}.tgz
+            release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
+            release/cselo-win-${{ steps.vars.outputs.tag }}.zip
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

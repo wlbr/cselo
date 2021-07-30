@@ -8,8 +8,8 @@ all: clean build
 clean:
 	@echo Running clean job...
 	rm -f coverage.txt
-	rm -rf bin/
-	rm -f main eloudp csscores cselo.tgz
+	rm -rf bin/ release/
+	rm -f main eloudp csscores cselo.tgz cselo.zip cselo.dmg
 
 
 build: #generate
@@ -31,9 +31,10 @@ coverage: test
 	go tool cover -html=coverage.txt
 
 deploy:
+	mkdir -p release
 	$(eval VER=$(shell sh -c "bin/mac/eloudp -version |cut -f 2 -d ' '"))
-	cd bin && tar -zcpv -s /linux/cselo-linux-$(VER)/ -f ../cselo-linux-$(VER).tgz linux/*   # OSX
-	cd bin/windows &&  zip -r -9 ../../cselo-win-$(VER).tgz *
+	cd bin && tar -zcpv -s /linux/cselo-linux-$(VER)/ -f ../release/cselo-linux-$(VER).tgz linux/*   # OSX
+	cd bin/windows &&  zip -r -9 ../../release/cselo-win-$(VER).tgz *
 
 initelodb: resetdb recreatetables
 
