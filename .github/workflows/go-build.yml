@@ -40,7 +40,7 @@ jobs:
       - name: Notarize OSX executable
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          MACOS_DEVELOPER_EMAL: ${{ secrets.MACOS_DEVELOPER_EMAIL }}
+          MACOS_DEVELOPER_EMAIL: ${{ secrets.MACOS_DEVELOPER_EMAIL }}
           MACOS_DEVELOPER_TEAM: ${{ secrets.MACOS_DEVELOPER_TEAM }}
           MACOS_ALTOOL_APPPASSWD: ${{ secrets.MACOS_ALTOOL_APPPASSWD }}
         run: |
