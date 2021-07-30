@@ -36,7 +36,7 @@ jobs:
           security unlock-keychain -p build.keychain.pw build.keychain
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain.pw build.keychain
-          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID ./bin/mac/* -v
+          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/mac/* -v
       - name: Deploy
         if: startsWith(github.ref, 'refs/tags/')
         run: make deploy

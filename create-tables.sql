@@ -148,14 +148,3 @@ CREATE TABLE matches (
 --  OWNER TO cseloapp;
 
 
-CREATE TABLE rounds (
-    id serial NOT NULL primary key,
-    match int REFERENCES matches (id),
-    duration interval(6),
-    roundstart timestamp,
-    roundend timestamp,
-    timestmp timestamp
-);
-
--- ALTER TABLE rounds
---  OWNER TO cseloapp;
