@@ -46,8 +46,16 @@ jobs:
         run: |
           mkdir -p release
           hdiutil create -fs HFS+ -ov -format UDZO -srcfolder ./bin/mac/ -volname cselo release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
-          xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_EMAIL" --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
-          sleep 150
+          requestUUID=$(xcrun altool --notarize-app --primary-bundle-id "de.wlbr.cselo" --username "$MACOS_DEVELOPER_EMAIL" --password "$MACOS_ALTOOL_APPPASSWD" --asc-provider "$MACOS_DEVELOPER_TEAM"  --file release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg 2>&1 | awk '/RequestUUID/ { print $NF; }')
+          if [[ $requestUUID == "" ]]; then  echo "could not upload for notarization" ; exit 1 ; fi
+          # wait for status to be not "in progress" any more
+          request_status="in progress"
+          while [[ "$request_status" == "in progress" ]]; do
+              echo -n "waiting... "
+              sleep 10
+              request_status=$(xcrun altool --notarization-info "$requestUUID" --username "$MACOS_DEVELOPER_EMAIL" --password "$MACOS_ALTOOL_APPPASSWD"  2>&1  | awk -F ': ' '/Status:/ { print $2; }' )
+              echo "$request_status"
+          done
           stapler staple release/cselo-mac-${{ steps.vars.outputs.tag }}.dmg
       - name: Deploy
         if: startsWith(github.ref, 'refs/tags/')

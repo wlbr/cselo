@@ -8,22 +8,22 @@ import (
 type Server struct {
 	IP           string
 	CurrentMatch *Match
-	CurrentRound *Round
+	// CurrentRound *Round
 }
 
-type Round struct {
-	ID       int64
-	Match    *Match
-	Duration time.Duration
-	Start    time.Time
-	End      time.Time
-}
+// type Round struct {
+// 	ID       int64
+// 	Match    *Match
+// 	Duration time.Duration
+// 	Start    time.Time
+// 	End      time.Time
+// }
 
-func (r *Round) CalcDuration() {
-	if !r.End.IsZero() && !r.Start.IsZero() {
-		r.Duration = r.End.Sub(r.Start)
-	}
-}
+// func (r *Round) CalcDuration() {
+// 	if !r.End.IsZero() && !r.Start.IsZero() {
+// 		r.Duration = r.End.Sub(r.Start)
+// 	}
+// }
 
 type Match struct {
 	ID          int64
