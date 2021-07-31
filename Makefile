@@ -26,6 +26,9 @@ test: #generate
 	@echo Running test job...
 	go test ./... -cover -coverprofile=coverage.txt
 
+analysis:
+	psql cselo -f analysis.sql
+
 coverage: test
 	@echo Running coverage job...
 	go tool cover -html=coverage.txt

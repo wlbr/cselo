@@ -90,7 +90,6 @@ CREATE TABLE defuses (
     id serial NOT NULL primary key,
     match int REFERENCES matches (id),
     actor int REFERENCES players (id),
-    victim int REFERENCES players (id),
     timestmp timestamp
 );
 
