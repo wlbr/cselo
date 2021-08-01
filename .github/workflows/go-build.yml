@@ -1,6 +1,7 @@
 name: GoBuild
 
 on:
+  workflow_dispatch:
   push:
     #branches: [ master ]
   pull_request:
@@ -23,7 +24,7 @@ jobs:
         run: make build
       - name: Test
         run: make test
-      - name: Codesign & notarize OSX executable
+      - name: Codesign OSX executable
         if: startsWith(github.ref, 'refs/tags/')
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
