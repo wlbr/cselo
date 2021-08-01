@@ -54,46 +54,17 @@ CREATE TABLE plantings (
 --  OWNER TO cseloapp;
 
 
-DROP TABLE IF EXISTS rescues CASCADE;
+DROP TABLE IF EXISTS scoreaction CASCADE;
 
-CREATE TABLE rescues (
+CREATE TABLE scoreaction (
     id serial NOT NULL primary key,
     match int REFERENCES matches (id),
     actor int REFERENCES players (id),
+    actiontype varchar(10),
     timestmp timestamp
 );
 
--- ALTER TABLE rescues
---  OWNER TO cseloapp;
-
-
--- ALTER TABLE assists
---  OWNER TO cseloapp;
-
-
-DROP TABLE IF EXISTS bombings CASCADE;
-
-CREATE TABLE bombings (
-    id serial NOT NULL primary key,
-    match int REFERENCES matches (id),
-    actor int REFERENCES players (id),
-    timestmp timestamp
-);
-
--- ALTER TABLE planbombingstings
---  OWNER TO cseloapp;
-
-
-DROP TABLE IF EXISTS defuses CASCADE;
-
-CREATE TABLE defuses (
-    id serial NOT NULL primary key,
-    match int REFERENCES matches (id),
-    actor int REFERENCES players (id),
-    timestmp timestamp
-);
-
--- ALTER TABLE defuses
+-- ALTER TABLE scoreaction
 --  OWNER TO cseloapp;
 
 

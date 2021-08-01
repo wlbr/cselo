@@ -8,6 +8,7 @@ import (
 type Server struct {
 	IP           string
 	CurrentMatch *Match
+	LastPlanter  *Player
 	// CurrentRound *Round
 }
 

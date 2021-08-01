@@ -17,7 +17,7 @@ type Bombed struct {
 
 func NewBombedEvent(server *elo.Server, t time.Time, message string) (e *Bombed) {
 	if sm := bombeddrex.FindStringSubmatch(message); sm != nil {
-		e = &Bombed{Subject: lastplanter, subjectTeam: sm[1],
+		e = &Bombed{Subject: server.LastPlanter, subjectTeam: sm[1],
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		log.Info("Created event: %+v", e)
 	}

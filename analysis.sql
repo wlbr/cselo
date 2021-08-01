@@ -1,7 +1,7 @@
 \! echo "Kills:";
 select initialname,count(actor) as kills,count(case when headshot=true then 1 end) as headshot, round(cast(count(case when headshot=true then 1 end) as float)/count(actor) * 1000)/10 as "hs%"  from kills
 left join players on actor=players.id
-WHERE timestmp > current_date - interval '2' day
+WHERE timestmp > current_date - interval '3' day
 group by initialname
 order by count(actor) DESC;
 
@@ -25,25 +25,12 @@ group by initialname
 order by count(case when victimtype='enemy' then 1 end) DESC;
 
 
-\! echo "Defuses:";
-select initialname, count(defuses.id) as defuses from defuses
-left join players on actor=players.id
+\! echo "Special actions:";
+SELECT initialname,count(case when actiontype='planting' then 1 end) as planting,
+    count(case when actiontype='bombing' then 1 end) as bombing,
+	count(case when actiontype='defuse' then 1 end) as defuse,
+	count(case when actiontype='rescue' then 1 end) as rescue FROM scoreaction
+LEFT JOIN players ON actor=players.id
 WHERE timestmp > current_date - interval '3' day
-group by initialname
-order by defuses DESC;
-
-\! echo "Bombings:";
-select initialname, count(bombings.id) as bombings from bombings
-left join players on actor=players.id
-WHERE timestmp > current_date - interval '3' day
-group by initialname
-order by bombings DESC;
-
-\! echo "Rescues:";
-select initialname, count(rescues.id) as rescues from rescues
-left join players on actor=players.id
-WHERE timestmp > current_date - interval '3' day
-group by initialname
-order by rescues DESC;
-
-
+GROUP BY initialname
+ORDER BY planting DESC;
