@@ -45,6 +45,7 @@ eloupd
 
 #binaries and generated stuff
 bin/
+release/
 data/
 db/
 README.html

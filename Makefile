@@ -27,7 +27,7 @@ test: #generate
 	go test ./... -cover -coverprofile=coverage.txt
 
 analysis:
-	psql cselo -f analysis.sql
+	psql cselo -f scripts/analysis.sql
 
 coverage: test
 	@echo Running coverage job...
@@ -55,8 +55,8 @@ stopdb:
 	pg_ctl stop -D $(DBPATH) -m fast
 
 resetdb:
-	psql postgres -f create-db.sql
+	psql postgres -f scripts/create-db.sql
 
 recreatetables:
-	psql cselo -U cseloapp -f create-tables.sql
+	psql cselo -U cseloapp -f scripts/create-tables.sql
 
