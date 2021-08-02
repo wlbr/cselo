@@ -80,9 +80,12 @@ func (s *PostgresSink) GetPlayerIDBySteamID(steamid string) int64 {
 func (s *PostgresSink) GetOrStorePlayerbySteamID(p *elo.Player) *elo.Player {
 	id := s.GetPlayerIDBySteamID(p.SteamID)
 	if id == -1 {
-		err := s.db.QueryRow(context.Background(), "INSERT INTO players  (initialname, steamid) VALUES ($1, $2) RETURNING id", p.Name, p.SteamID).Scan(&id)
+		if p.ProfileID == "" {
+			p.ProfileID = elo.SteamIdToProfileId(p.SteamID)
+		}
+		err := s.db.QueryRow(context.Background(), "INSERT INTO players  (initialname, steamid, profileid) VALUES ($1, $2, $3) RETURNING id", p.Name, p.SteamID, p.ProfileID).Scan(&id)
 		if err != nil {
-			log.Error("Cannot store player in PostgresQL database: %v", err)
+			log.Error("Cannot store player '%+v' in PostgresQL database: %v", p, err)
 		}
 		p.ID = id
 
@@ -266,3 +269,8 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 
 func (s *PostgresSink) HandleRoundStartEvent(e *events.RoundStart) {}
 func (s *PostgresSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
+
+func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
+	log.Info("Writing accolade event to PostgreSQL database: %+v", e)
+	//fmt.Printf("Accolade: %s - %s\n", e.Subject.Name, e.Type)
+}

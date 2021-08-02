@@ -42,6 +42,7 @@ func main() {
 		emitter = elo.NewUdpEmitter(config)
 	}
 	emitter.AddFilter(&elo.AllBotsFilter{})
+	emitter.AddFilter(&elo.UnknownFilter{})
 	emitter.AddProcessor(processor)
 
 	start := time.Now()

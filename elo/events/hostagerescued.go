@@ -20,7 +20,7 @@ var rescuedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" triggered "Rescue
 
 func NewHostageRescuedEvent(server *elo.Server, t time.Time, message string) (e *HostageRescued) {
 	if sm := rescuedrex.FindStringSubmatch(message); sm != nil {
-		e = &HostageRescued{Subject: &elo.Player{Name: sm[1], SteamID: sm[3]}, subjectTeam: sm[4],
+		e = &HostageRescued{Subject: elo.GetPlayer(sm[1], sm[3]), subjectTeam: sm[4],
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		log.Info("Created event: %+v", e)
 	}

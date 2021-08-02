@@ -5,7 +5,8 @@ DROP TABLE IF EXISTS players CASCADE;
 CREATE TABLE players (
  	id serial NOT NULL primary key,
  	initialname varchar(50) NOT NULL ,
- 	steamid varchar(50) unique NOT NULL
+ 	steamid varchar(50) unique NOT NULL,
+  profileid varchar(25)
  	);
 
 --ALTER TABLE players
@@ -118,3 +119,17 @@ CREATE TABLE matches (
 --  OWNER TO cseloapp;
 
 
+DROP TABLE IF EXISTS accolade CASCADE;
+
+CREATE TABLE accolade (
+    id serial NOT NULL primary key,
+    match int REFERENCES matches (id),
+    actor int REFERENCES players (id),
+    accoladetype varchar(20),
+    position int,
+    accoladevalue float,
+    score float
+);
+
+-- ALTER TABLE accolade
+--  OWNER TO cseloapp;

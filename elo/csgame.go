@@ -1,16 +1,9 @@
 package elo
 
 import (
-	"fmt"
+	"sync"
 	"time"
 )
-
-type Server struct {
-	IP           string
-	CurrentMatch *Match
-	LastPlanter  *Player
-	// CurrentRound *Round
-}
 
 // type Round struct {
 // 	ID       int64
@@ -27,73 +20,46 @@ type Server struct {
 // }
 
 type Match struct {
-	ID          int64
-	Server      *Server
-	GameMode    string
-	MapGroup    string
-	MapFullName string
-	MapName     string
-	ScoreA      int64
-	ScoreB      int64
-	Start       time.Time
-	End         time.Time
-	Duration    time.Duration
+	ID              int64
+	Server          *Server
+	GameMode        string
+	MapGroup        string
+	MapFullName     string
+	MapName         string
+	ScoreA          int64
+	ScoreB          int64
+	Start           time.Time
+	End             time.Time
+	Duration        time.Duration
+	playersNameLock sync.RWMutex
+	playersByName   map[string]*Player
+	playersIdLock   sync.RWMutex
+	playersById     map[string]*Player
 }
 
-type Player struct {
-	ID      int64
-	Name    string
-	SteamID string
-}
-
-type PlayersCache map[int]*Player
-
-var players = make(map[string]*Player)
-
-func GetPlayer(name, steamid string) (p *Player) {
-	if p = players[steamid]; p == nil {
-		p = &Player{Name: name, SteamID: steamid}
-		players[steamid] = p
+func (m *Match) AddPlayer(p *Player) {
+	m.playersNameLock.Lock()
+	if m.playersByName[p.Name] == nil {
+		m.playersByName[p.Name] = p
 	}
+	m.playersNameLock.Unlock()
+	m.playersIdLock.Lock()
+	if m.playersById[p.SteamID] == nil {
+		m.playersById[p.SteamID] = p
+	}
+	m.playersIdLock.Unlock()
+}
+
+func (m *Match) GetPlayerByName(name string) (p *Player) {
+	m.playersNameLock.RLock()
+	p = m.playersByName[name]
+	m.playersNameLock.RUnlock()
 	return p
 }
 
-func (p *Player) String() string {
-	return p.Name
-}
-
-type Intervall struct {
-	Start time.Time
-	End   time.Time
-}
-
-func (i *Intervall) String() string {
-	tfrmt := time.ANSIC
-	return fmt.Sprintf("[%s - %s]", i.Start.Format(tfrmt), i.End.Format(tfrmt))
-}
-
-const Day = 24 * time.Hour
-const Week = 7 * Day
-
-func NewIntervall(start, end time.Time) *Intervall {
-	return &Intervall{Start: start, End: end}
-}
-
-func IntervallLastXDays(x int) *Intervall {
-	now := time.Now()
-	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 99, 999, time.UTC)
-	closetostart := now.Add(Day * time.Duration(-x))
-	start := time.Date(closetostart.Year(), closetostart.Month(), closetostart.Day(), 0, 0, 0, 0, time.UTC)
-	return NewIntervall(start, end)
-}
-
-func IntervallLastWeek() *Intervall {
-	return IntervallLastXDays(7)
-}
-
-func IntervallLastXYears(x int) *Intervall {
-	now := time.Now()
-	end := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 99, 999, time.UTC)
-	start := time.Date(now.Year()-x, now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	return NewIntervall(start, end)
+func (m *Match) GetPlayerById(steamid string) (p *Player) {
+	m.playersIdLock.RLock()
+	p = m.playersById[steamid]
+	m.playersIdLock.RUnlock()
+	return p
 }

@@ -105,5 +105,11 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m strin
 		}
 		return
 	}
+	if e := events.NewAccoladeEvent(srv, t, m); e != nil {
+		for _, s := range p.sinks {
+			s.HandleAccoladeEvent(e)
+		}
+		return
+	}
 
 }

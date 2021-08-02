@@ -20,7 +20,7 @@ var defusedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" triggered "Defuse
 
 func NewDefuseEvent(server *elo.Server, t time.Time, message string) (e *Defuse) {
 	if sm := defusedrex.FindStringSubmatch(message); sm != nil {
-		e = &Defuse{Subject: &elo.Player{Name: sm[1], SteamID: sm[3]}, subjectTeam: sm[4],
+		e = &Defuse{Subject: elo.GetPlayer(sm[1], sm[3]), subjectTeam: sm[4],
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		log.Info("Created event: %+v", e)
 	}

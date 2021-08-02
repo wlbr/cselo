@@ -23,8 +23,8 @@ type Assist struct {
 
 func NewAssistEvent(server *elo.Server, t time.Time, message string) (e *Assist) {
 	if sm := assistrex.FindStringSubmatch(message); sm != nil {
-		e = &Assist{Subject: &elo.Player{Name: sm[1], SteamID: sm[3]}, subjectTeam: sm[4],
-			Object: &elo.Player{Name: sm[5], SteamID: sm[7]}, objectTeam: sm[8],
+		e = &Assist{Subject: elo.GetPlayer(sm[1], sm[3]), subjectTeam: sm[4],
+			Object: elo.GetPlayer(sm[5], sm[7]), objectTeam: sm[8],
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		log.Info("Created event: %+v", e)
 	}

@@ -36,7 +36,7 @@ func NewGrenadeEvent(server *elo.Server, t time.Time, message string) (e *Grenad
 				log.Error("Entity number not a int. Error: '%s', message: '%s'", err, message)
 			}
 		}
-		e = &Grenade{Subject: &elo.Player{Name: sm[1], SteamID: sm[3]}, subjectTeam: sm[4],
+		e = &Grenade{Subject: elo.GetPlayer(sm[1], sm[3]), subjectTeam: sm[4],
 			GrenadeType: gtype, position: sm[6], flashentity: entity,
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		log.Info("Created event: %+v", e)

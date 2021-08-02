@@ -29,3 +29,22 @@ func (f *AllBotsFilter) Test(message string) bool {
 	}
 	return false
 }
+
+//================================
+
+var unkownrex = regexp.MustCompile(`<unknown>`)
+
+type UnknownFilter struct {
+}
+
+func (f *UnknownFilter) String() string {
+	return "Filters all events with unknown players involved."
+}
+
+func (f *UnknownFilter) Test(message string) bool {
+	if unkownrex.MatchString(message) {
+		log.Info("UnknownFilter: Filtered message '%s'", message)
+		return true
+	}
+	return false
+}

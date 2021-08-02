@@ -20,7 +20,7 @@ var plantedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" triggered "Plante
 
 func NewPlantedEvent(server *elo.Server, t time.Time, message string) (e *Planted) {
 	if sm := plantedrex.FindStringSubmatch(message); sm != nil {
-		pl := &elo.Player{Name: sm[1], SteamID: sm[3]}
+		pl := elo.GetPlayer(sm[1], sm[3])
 		server.LastPlanter = pl
 		e = &Planted{Subject: pl, subjectTeam: sm[4],
 			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
