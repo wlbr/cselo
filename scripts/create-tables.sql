@@ -12,6 +12,24 @@ CREATE TABLE players (
 --ALTER TABLE players
 --  OWNER TO cselo;
 
+DROP TABLE IF EXISTS matches CASCADE;
+
+CREATE TABLE matches (
+    id serial NOT NULL primary key,
+    gamemode varchar(20),
+    mapgroup varchar(40),
+    mapfullname varchar(80),
+    mapname varchar(40),
+    scorea int,
+    scoreb int,
+    duration interval(6),
+    matchstart timestamp,
+    matchend timestamp,
+    timestmp timestamp
+);
+
+-- ALTER TABLE matches
+--  OWNER TO cseloapp;
 
 DROP TABLE IF EXISTS kills CASCADE;
 
@@ -99,26 +117,6 @@ CREATE TABLE grenadethrows (
 --  OWNER TO cseloapp;
 
 
-DROP TABLE IF EXISTS matches CASCADE;
-
-CREATE TABLE matches (
-    id serial NOT NULL primary key,
-    gamemode varchar(20),
-    mapgroup varchar(40),
-    mapfullname varchar(80),
-    mapname varchar(40),
-    scorea int,
-    scoreb int,
-    duration interval(6),
-    matchstart timestamp,
-    matchend timestamp,
-    timestmp timestamp
-);
-
--- ALTER TABLE matches
---  OWNER TO cseloapp;
-
-
 DROP TABLE IF EXISTS accolade CASCADE;
 
 CREATE TABLE accolade (
@@ -128,7 +126,8 @@ CREATE TABLE accolade (
     accoladetype varchar(20),
     position int,
     accoladevalue float,
-    score float
+    score float,
+    timestmp timestamp
 );
 
 -- ALTER TABLE accolade

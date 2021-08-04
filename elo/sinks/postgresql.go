@@ -272,5 +272,12 @@ func (s *PostgresSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
 
 func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 	log.Info("Writing accolade event to PostgreSQL database: %+v", e)
-	//fmt.Printf("Accolade: %s - %s\n", e.Subject.Name, e.Type)
+	subject := s.GetOrStorePlayerbySteamID(e.Subject)
+
+	_, err := s.db.Exec(context.Background(),
+		"INSERT INTO accolade (match, actor, accoladetype, position, accoladevalue, score, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		e.Server.CurrentMatch.ID, subject.ID, e.Type, e.Position, e.Value, e.Score, e.Time)
+	if err != nil {
+		log.Error("Cannot store ACCOLADE in PostgresQL database: %v", err)
+	}
 }

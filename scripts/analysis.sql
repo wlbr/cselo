@@ -34,3 +34,13 @@ LEFT JOIN players ON actor=players.id
 WHERE timestmp > current_date - interval '3' day
 GROUP BY initialname
 ORDER BY planting DESC;
+
+
+\! echo "Accolade:";
+SELECT initialname,count(case when accoladetype='mvps' then 1 end) as mvps,
+	count(case when accoladetype='nopurchasewins' then 1 end) as nopurchasewins,
+	count(case when accoladetype='chickenskilled' then 1 end) as chickenskilled FROM accolade
+LEFT JOIN players ON actor=players.id
+WHERE timestmp > current_date - interval '3' day
+GROUP BY initialname
+ORDER BY mvps DESC;

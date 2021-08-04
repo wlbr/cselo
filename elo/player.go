@@ -15,9 +15,23 @@ type Player struct {
 	ProfileID string
 }
 
+func (p *Player) String() string {
+	return p.Name + "-" + p.SteamID + "-" + p.ProfileID
+}
+
 type PlayersCache map[int]*Player
 
 var players = make(map[string]*Player)
+
+type PlayerLookupError struct {
+	description string
+	name        string
+	candidates  []*Player
+}
+
+func (e *PlayerLookupError) Error() string {
+	return fmt.Sprintf("%s '%s': %v", e.description, e.name, e.candidates)
+}
 
 func GetPlayer(name, steamid string) (p *Player) {
 	if p = players[steamid]; p == nil {
@@ -27,8 +41,23 @@ func GetPlayer(name, steamid string) (p *Player) {
 	return p
 }
 
-func (p *Player) String() string {
-	return p.Name + "-" + p.SteamID + "-" + p.ProfileID
+func GetPlayerByName(name string) (p *Player, e *PlayerLookupError) {
+	var cands []*Player
+	for _, pl := range players {
+		if pl.Name == name {
+			cands = append(cands, pl)
+		}
+	}
+
+	switch len(cands) {
+	case 0:
+		e = &PlayerLookupError{description: "Did not finy any player with name", name: name, candidates: cands}
+	case 1:
+		p = cands[0]
+	default:
+		e = &PlayerLookupError{description: "Found more than one player with name", name: name, candidates: cands}
+	}
+	return p, e
 }
 
 //STEAM_1:0:681607

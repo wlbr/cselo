@@ -43,9 +43,14 @@ func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (e *Accol
 				if err != nil {
 					log.Error("Could not read score in accolade. %v   message: %s", err, message)
 				} else {
-					e = &Accolade{Subject: &elo.Player{Name: sm[2]}, Type: sm[1], Value: val, Position: pos, Score: sco,
-						BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
-					log.Info("Created event: %+v", e)
+					p, err := elo.GetPlayerByName(sm[2])
+					if err != nil {
+						log.Error("Cannot identify player mentioned in accolade: %s   message: %s", e, message)
+					} else {
+						e = &Accolade{Subject: p, Type: sm[1], Value: val, Position: pos, Score: sco,
+							BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+						log.Info("Created event: %+v", e)
+					}
 				}
 			}
 		}
