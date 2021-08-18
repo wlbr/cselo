@@ -12,7 +12,7 @@ func (s *Postgres) GetPlayerByID(id int64) *elo.Player {
 	log.Info("Getting PLAYER by id from PostgreSQL database. id='%v'", id)
 
 	p := &elo.Player{}
-	row := s.db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE id=$1`,
+	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE id=$1`,
 		id)
 	err := row.Scan(&p.ID, &p.Name, &p.SteamID, &p.ProfileID)
 	switch {
@@ -28,7 +28,7 @@ func (s *Postgres) GetPlayerBySteamID(steamid string) *elo.Player {
 	log.Info("Getting PLAYER by steamid from PostgreSQL database. steamid='%v'", steamid)
 
 	p := &elo.Player{}
-	row := s.db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE steamid=$1`,
+	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE steamid=$1`,
 		steamid)
 	err := row.Scan(&p.ID, &p.Name, &p.SteamID, &p.ProfileID)
 	switch {
@@ -43,7 +43,7 @@ func (s *Postgres) GetPlayerBySteamID(steamid string) *elo.Player {
 func (s *Postgres) GetAllPlayers() elo.PlayersCache {
 	log.Info("Getting all players.")
 
-	rows, err := s.db.Query(context.Background(), "SELECT id, initialname, steamid, profileid FROM players;")
+	rows, err := s.Db.Query(context.Background(), "SELECT id, initialname, steamid, profileid FROM players;")
 	defer rows.Close()
 	if err != nil {
 		log.Error("Cannot read all players from PostgresQL database: %v", err)

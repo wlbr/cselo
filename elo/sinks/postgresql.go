@@ -70,7 +70,7 @@ func (s *PostgresSink) GetPlayerIDBySteamID(steamid string) int64 {
 	err := row.Scan(&id)
 	switch {
 	case err == pgx.ErrNoRows:
-		log.Info("Cannot find PLAYER with steamid '%s' in PostgresQL database: %v", steamid, err)
+		log.Info("Cannot find PLAYER with steamid '%s' in PostgresQL database. id=%v: %v", steamid, id, err)
 	case err != nil:
 		log.Error("Cannot read from PostgresQL database: %v", err)
 	}

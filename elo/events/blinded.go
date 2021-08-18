@@ -35,8 +35,8 @@ func NewBlindedEvent(server *elo.Server, t time.Time, message string) (e *Blinde
 			log.Error("Entity number not a int. %s, message: \"%s\" %v", err2, message, ent)
 		}
 		if err1 == nil && err2 == nil {
-			e = &Blinded{Subject: &elo.Player{Name: sm[6], SteamID: sm[8]}, subjectTeam: sm[9],
-				Object: &elo.Player{Name: sm[1], SteamID: sm[3]}, objectTeam: sm[4],
+			e = &Blinded{Subject: elo.GetPlayer(sm[6], sm[8]), subjectTeam: sm[9],
+				Object: elo.GetPlayer(sm[1], sm[3]), objectTeam: sm[4],
 				Duration: dur, flashentity: ent,
 				BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
 		}

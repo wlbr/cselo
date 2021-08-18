@@ -20,11 +20,12 @@ build: #generate
 	GOOS=darwin go build  -ldflags "$(LINKERFLAGS)" -o bin/mac ./...
 
 run:
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo.ini -cslog data/latest.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/latest.log
 
-test: #generate
+test: recreatetables  #generate
+	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
 	@echo Running test job...
-	go test ./... -cover -coverprofile=coverage.txt
+	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -loglevel Error
 
 analysis:
 	psql cselo -f scripts/analysis.sql
@@ -43,8 +44,8 @@ initelodb: resetdb recreatetables
 
 wipe: initelodb clean
 
-newpostgresdb:
-	initdb -D $(DBPATH)
+#newpostgresdb:
+#	initdb -D $(DBPATH)
 
 startdb:
 	#postgres -D $(DBPATH)
@@ -54,7 +55,8 @@ startdb:
 stopdb:
 	pg_ctl stop -D $(DBPATH) -m fast
 
-resetdb:
+resetdb: stopdb startdb
+	sleep 3
 	psql postgres -f scripts/create-db.sql
 
 recreatetables:
