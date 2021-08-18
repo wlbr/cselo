@@ -1,16 +1,24 @@
 --psql cselo -U cseloapp -f create-tables.sql
 
+
+
+
 DROP TABLE IF EXISTS players CASCADE;
 
 CREATE TABLE players (
  	id serial NOT NULL primary key,
  	initialname varchar(50) NOT NULL ,
  	steamid varchar(50) unique NOT NULL,
-  profileid varchar(25)
+  profileid varchar(25),
+  avatar varchar(200)
  	);
 
 --ALTER TABLE players
 --  OWNER TO cselo;
+
+
+GRANT SELECT ON TABLE players TO cselojavaui;
+GRANT UPDATE ON TABLE players TO cselojavaui;
 
 DROP TABLE IF EXISTS matches CASCADE;
 
@@ -31,6 +39,9 @@ CREATE TABLE matches (
 -- ALTER TABLE matches
 --  OWNER TO cseloapp;
 
+GRANT SELECT ON TABLE matches TO cselojavaui;
+
+
 DROP TABLE IF EXISTS kills CASCADE;
 
 CREATE TABLE kills (
@@ -46,6 +57,9 @@ CREATE TABLE kills (
 -- ALTER TABLE kills
 --  OWNER TO cseloapp;
 
+GRANT SELECT ON TABLE kills TO cselojavaui;
+
+
 DROP TABLE IF EXISTS assists CASCADE;
 
 CREATE TABLE assists (
@@ -58,6 +72,8 @@ CREATE TABLE assists (
 
 -- ALTER TABLE assists
 --  OWNER TO cseloapp;
+
+GRANT SELECT ON TABLE assists TO cselojavaui;
 
 
 DROP TABLE IF EXISTS plantings CASCADE;
@@ -72,6 +88,8 @@ CREATE TABLE plantings (
 -- ALTER TABLE plantings
 --  OWNER TO cseloapp;
 
+GRANT SELECT ON TABLE plantings TO cselojavaui;
+
 
 DROP TABLE IF EXISTS scoreaction CASCADE;
 
@@ -85,6 +103,8 @@ CREATE TABLE scoreaction (
 
 -- ALTER TABLE scoreaction
 --  OWNER TO cseloapp;
+
+GRANT SELECT ON TABLE scoreaction TO cselojavaui;
 
 
 DROP TABLE IF EXISTS blindings CASCADE;
@@ -102,6 +122,8 @@ CREATE TABLE blindings (
 -- ALTER TABLE blindings
 --  OWNER TO cseloapp;
 
+GRANT SELECT ON TABLE blindings TO cselojavaui;
+
 
 DROP TABLE IF EXISTS grenadethrows CASCADE;
 
@@ -115,6 +137,8 @@ CREATE TABLE grenadethrows (
 
 -- ALTER TABLE grenadethrows
 --  OWNER TO cseloapp;
+
+GRANT SELECT ON TABLE grenadethrows TO cselojavaui;
 
 
 DROP TABLE IF EXISTS accolade CASCADE;
@@ -132,3 +156,9 @@ CREATE TABLE accolade (
 
 -- ALTER TABLE accolade
 --  OWNER TO cseloapp;
+
+GRANT SELECT ON TABLE accolade TO cselojavaui;
+
+
+
+

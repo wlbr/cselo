@@ -29,7 +29,7 @@ type Accolade struct {
 //ACCOLADE, FINAL: {mvps},	Jacky<8>,	VALUE: 3.000000,	POS: 1,	SCORE: 24.000000
 var accoladerexrex = regexp.MustCompile(`^ACCOLADE,\s+FINAL:\s+{(.+)},\s+(.+)<(.+)>,\s+VALUE:\s+(.+),\s+POS:\s+(.+),\s+SCORE:\s+(.+)$`)
 
-func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (e *Accolade) {
+func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (a *Accolade) {
 	if sm := accoladerexrex.FindStringSubmatch(message); sm != nil {
 		pos, err := strconv.Atoi(sm[5])
 		if err != nil {
@@ -45,17 +45,17 @@ func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (e *Accol
 				} else {
 					p, err := elo.GetPlayerByName(sm[2])
 					if err != nil {
-						log.Error("Cannot identify player mentioned in accolade: %s   message: %s", e, message)
+						log.Info("Cannot identify player mentioned in accolade: %s   message: %s", sm[2], message)
 					} else {
-						e = &Accolade{Subject: p, Type: sm[1], Value: val, Position: pos, Score: sco,
+						a = &Accolade{Subject: p, Type: sm[1], Value: val, Position: pos, Score: sco,
 							BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
-						log.Info("Created event: %+v", e)
+						log.Info("Created event: %+v", a)
 					}
 				}
 			}
 		}
 	}
-	return e
+	return a
 }
 
 func (e *Accolade) String() string {

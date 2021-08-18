@@ -5,6 +5,13 @@ WHERE timestmp > current_date - interval '3' day
 group by initialname
 order by count(actor) DESC;
 
+\! echo "deaths:";
+select initialname,count(victim) as kills,count(case when headshot=true then 1 end) as headshot, round(cast(count(case when headshot=true then 1 end) as float)/count(victim) * 1000)/10 as "hs%"  from kills
+left join players on victim=players.id
+WHERE timestmp > current_date - interval '3' day
+group by initialname
+order by count(victim) DESC;
+
 \! echo "All grenades:";
 SELECT initialname,count(case when grenadetype='flashbang' then 1 end) as flash,
     count(case when grenadetype='hegrenade' then 1 end) as he,
@@ -37,7 +44,7 @@ ORDER BY planting DESC;
 
 
 \! echo "Accolade:";
-SELECT initialname,count(case when accoladetype='mvps' then 1 end) as mvps,
+SELECT initialname,count(case when accoladetype='mvps' then 1 end) as MVPs,
 	count(case when accoladetype='nopurchasewins' then 1 end) as nopurchasewins,
 	count(case when accoladetype='chickenskilled' then 1 end) as chickenskilled FROM accolade
 LEFT JOIN players ON actor=players.id

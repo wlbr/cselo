@@ -16,7 +16,7 @@ func (s *Postgres) GetFlashStatsForPlayer(p *elo.Player, iv *elo.Intervall) *elo
 	// 	p.SteamID = fp.SteamID
 	// }
 	if fp != nil {
-		row := s.db.QueryRow(context.Background(), "select count(case when victimtype='enemy' then 1 end) as enemyflashes, "+
+		row := s.Db.QueryRow(context.Background(), "select count(case when victimtype='enemy' then 1 end) as enemyflashes, "+
 			"count(case when victimtype='teammate' then 1 end) as teammateflash, "+
 			"count(case when victimtype='self' then 1 end) as selfflash "+
 			"from blindings "+

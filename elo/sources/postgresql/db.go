@@ -12,7 +12,7 @@ import (
 
 type Postgres struct {
 	config       *elo.Config
-	db           *pgx.Conn
+	Db           *pgx.Conn
 	PlayersCache elo.PlayersCache
 }
 
@@ -46,13 +46,13 @@ func NewPostgres(cfg *elo.Config) (*Postgres, error) {
 		err = fmt.Errorf("No PostgresQL database name given")
 	}
 	if err == nil {
-		s.db, err = pgx.Connect(context.Background(), dbinfo)
+		s.Db, err = pgx.Connect(context.Background(), dbinfo)
 		if err != nil {
 			log.Error("Cannot open PostgresQL database: %v", err)
 		}
 		cfg.AddCleanUpFn(func() error {
 			log.Info("Cleanup - closing PostgreSQL database connection")
-			return s.db.Close(context.Background())
+			return s.Db.Close(context.Background())
 		})
 		log.Info("Established PostgreSQL database connection")
 	} else {
