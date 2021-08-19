@@ -6,8 +6,8 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/events"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/events"
 )
 
 type InfluxSink struct {

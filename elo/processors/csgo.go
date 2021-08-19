@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/events"
-	"github.com/wlbr/cs-elo/elo/sinks"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/events"
+	"github.com/wlbr/cselo/elo/sinks"
 )
 
 type CsgoLog struct {

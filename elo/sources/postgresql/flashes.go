@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 func (s *Postgres) GetFlashStatsForPlayer(p *elo.Player, iv *elo.Intervall) *elo.Player {

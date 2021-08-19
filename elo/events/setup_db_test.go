@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/sources/postgresql"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/sources/postgresql"
 )
 
 var config *elo.Config

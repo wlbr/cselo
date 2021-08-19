@@ -1,8 +1,8 @@
 package sinks
 
 import (
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/events"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/events"
 )
 
 type inMemoryCounterSink struct {

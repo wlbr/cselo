@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 func (s *Postgres) GetPlayerByID(id int64) *elo.Player {

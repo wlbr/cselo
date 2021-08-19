@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/sources/postgresql"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/sources/postgresql"
 )
 
 var (
@@ -68,6 +68,7 @@ func main() {
 
 	fmt.Printf("Processing took %s\n", elapsed)
 }
+
 /*
 type playerkill struct {
 	player string

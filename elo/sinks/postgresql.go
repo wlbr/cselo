@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/events"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/events"
 )
 
 type PostgresSink struct {

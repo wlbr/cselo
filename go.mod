@@ -1,4 +1,4 @@
-module github.com/wlbr/cs-elo
+module github.com/wlbr/cselo
 
 go 1.17
 

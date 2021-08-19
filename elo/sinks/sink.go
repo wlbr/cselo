@@ -1,6 +1,6 @@
 package sinks
 
-import "github.com/wlbr/cs-elo/elo/events"
+import "github.com/wlbr/cselo/elo/events"
 
 type Sink interface {
 	HandleKillEvent(e *events.Kill)
