@@ -10,23 +10,28 @@ import (
 	"github.com/commander-cli/cmd"
 )
 
+var playerskills int = -1
+
 func countKillsPerPlayer(p string) int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+killed.+<STEAM_" %s |wc -l`, p, testfile))
+	if playerskills == -1 {
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+killed.+<STEAM_" %s |wc -l`, p, testfile))
 
-	err := c.Execute()
-	if err != nil {
-		panic(err.Error())
-	}
+		err := c.Execute()
+		if err != nil {
+			panic(err.Error())
+		}
 
-	cs := strings.Trim(c.Stdout(), " \n")
-	killcount, err := strconv.Atoi(cs)
-	if err != nil {
-		panic(err.Error())
+		cs := strings.Trim(c.Stdout(), " \n")
+		count, err := strconv.Atoi(cs)
+		if err != nil {
+			panic(err.Error())
+		}
+		playerskills = count
 	}
-	return killcount
+	return playerskills
 }
 
-func TestKillsPerPlayer(t *testing.T) {
+func TestKillsPerPlayerByDB(t *testing.T) {
 	var dbkillcount int
 	player := "Jagger"
 	killcount := countKillsPerPlayer(player)
@@ -44,23 +49,28 @@ func TestKillsPerPlayer(t *testing.T) {
 	}
 }
 
+var allkills int = -1
+
 func countAllKills() int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+killed.+<STEAM_" %s |wc -l`, testfile))
+	if allkills == -1 {
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+killed.+<STEAM_" %s |wc -l`, testfile))
 
-	err := c.Execute()
-	if err != nil {
-		panic(err.Error())
-	}
+		err := c.Execute()
+		if err != nil {
+			panic(err.Error())
+		}
 
-	cs := strings.Trim(c.Stdout(), " \n")
-	killcount, err := strconv.Atoi(cs)
-	if err != nil {
-		panic(err.Error())
+		cs := strings.Trim(c.Stdout(), " \n")
+		killcount, err := strconv.Atoi(cs)
+		if err != nil {
+			panic(err.Error())
+		}
+		allkills = killcount
 	}
-	return killcount
+	return allkills
 }
 
-func TestAllKills(t *testing.T) {
+func TestAllKillsByDB(t *testing.T) {
 	var dbkillcount int
 	killcount := countAllKills()
 

@@ -10,23 +10,28 @@ import (
 	"github.com/commander-cli/cmd"
 )
 
+var allbombings int = -1
+
 func countAllBombings() int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag ".+ triggered \"SFUI_Notice_Target_Bombed\"" %s |wc -l`, testfile))
+	if allbombings == -1 {
+		c := cmd.NewCommand(fmt.Sprintf(`ag ".+ triggered \"SFUI_Notice_Target_Bombed\"" %s |wc -l`, testfile))
 
-	err := c.Execute()
-	if err != nil {
-		panic(err.Error())
-	}
+		err := c.Execute()
+		if err != nil {
+			panic(err.Error())
+		}
 
-	cs := strings.Trim(c.Stdout(), " \n")
-	count, err := strconv.Atoi(cs)
-	if err != nil {
-		panic(err.Error())
+		cs := strings.Trim(c.Stdout(), " \n")
+		count, err := strconv.Atoi(cs)
+		if err != nil {
+			panic(err.Error())
+		}
+		allassists = count
 	}
-	return count
+	return allassists
 }
 
-func TestAllBombings(t *testing.T) {
+func TestAllBombingsByDB(t *testing.T) {
 	var dbcount int
 	filecount := countAllBombings()
 
