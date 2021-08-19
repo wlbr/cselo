@@ -26,9 +26,9 @@ func testsetup() {
 	config = new(elo.Config)
 	config.Initialize("Test", time.Now().Format(time.ANSIC))
 
+	// db tests
 	var err error
 	store, err = postgresql.NewPostgres(config)
-
 	if err != nil {
 		panic(err.Error())
 	}

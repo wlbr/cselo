@@ -1,0 +1,46 @@
+package elo
+
+import (
+	"os"
+	"testing"
+	"time"
+
+	"github.com/wlbr/cs-elo/elo/processors"
+	"github.com/wlbr/cs-elo/elo/sinks"
+)
+
+var config *elo.Config
+var testfile string
+
+func TestMain(m *testing.M) {
+	testsetup()
+	code := m.Run()
+	testteardown()
+	os.Exit(code)
+}
+
+func testsetup() {
+	testfile = "../../data/test.log"
+
+	config = new(Config)
+	config.Initialize("Test", time.Now().Format(time.ANSIC))
+
+	processor := processors.NewCsgoLogProcessor(config)
+	if s, e := sinks.NewPrinterSink(config); e == nil {
+		processor.AddSink(s)
+	}
+
+	emitter := NewFileEmitter(config)
+
+	emitter.AddFilter(&AllBotsFilter{})
+	emitter.AddFilter(&UnknownFilter{})
+	emitter.AddProcessor(processor)
+
+	emitter.Loop()
+
+}
+
+func testteardown() {
+	defer config.CleanUp()
+
+}

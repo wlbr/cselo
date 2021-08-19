@@ -22,8 +22,8 @@ build: #generate
 run:
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/latest.log
 
-test: recreatetables  #generate
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
+test: #recreatetables  #generate
+#	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
 	@echo Running test job...
 	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -loglevel Error
 

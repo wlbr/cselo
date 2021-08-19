@@ -10,23 +10,28 @@ import (
 	"github.com/commander-cli/cmd"
 )
 
+var playersassists int = -1
+
 func countAssistsPerPlayer(p string) int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+assisted.+<STEAM_" %s |wc -l`, p, testfile))
+	if playersassists == -1 {
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+assisted.+<STEAM_" %s |wc -l`, p, testfile))
 
-	err := c.Execute()
-	if err != nil {
-		panic(err.Error())
-	}
+		err := c.Execute()
+		if err != nil {
+			panic(err.Error())
+		}
 
-	cs := strings.Trim(c.Stdout(), " \n")
-	count, err := strconv.Atoi(cs)
-	if err != nil {
-		panic(err.Error())
+		cs := strings.Trim(c.Stdout(), " \n")
+		count, err := strconv.Atoi(cs)
+		if err != nil {
+			panic(err.Error())
+		}
+		playersassists = count
 	}
-	return count
+	return playersassists
 }
 
-func TestAssitsPerPlayer(t *testing.T) {
+func TestAssistsPerPlayerByDB(t *testing.T) {
 	var dbcount int
 	player := "Jagger"
 	filecount := countAssistsPerPlayer(player)
@@ -44,23 +49,28 @@ func TestAssitsPerPlayer(t *testing.T) {
 	}
 }
 
+var allassists int = -1
+
 func countAllAssists() int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+assisted.+<STEAM_" %s |wc -l`, testfile))
+	if allassists == -1 {
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+assisted.+<STEAM_" %s |wc -l`, testfile))
 
-	err := c.Execute()
-	if err != nil {
-		panic(err.Error())
-	}
+		err := c.Execute()
+		if err != nil {
+			panic(err.Error())
+		}
 
-	cs := strings.Trim(c.Stdout(), " \n")
-	count, err := strconv.Atoi(cs)
-	if err != nil {
-		panic(err.Error())
+		cs := strings.Trim(c.Stdout(), " \n")
+		count, err := strconv.Atoi(cs)
+		if err != nil {
+			panic(err.Error())
+		}
+		allassists = count
 	}
-	return count
+	return allassists
 }
 
-func TestAllAssits(t *testing.T) {
+func TestAllAssistsByDB(t *testing.T) {
 	var dbcount int
 	filecount := countAllAssists()
 

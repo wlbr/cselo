@@ -43,3 +43,4 @@ func (s *printerSink) HandleRoundStartEvent(e *events.RoundStart)         { s.pr
 func (s *printerSink) HandleRoundEndEvent(e *events.RoundEnd)             { s.printToFile(e) }
 func (s *printerSink) HandleMatchStartEvent(e *events.MatchStart)         { s.printToFile(e) }
 func (s *printerSink) HandleMatchEndEvent(e *events.MatchEnd)             { s.printToFile(e) }
+func (s *printerSink) HandleAccoladeEvent(e *events.Accolade)             { s.printToFile(e) }
