@@ -25,7 +25,7 @@ run:
 test: #recreatetables  #generate
 #	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
 	@echo Running test job...
-	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -loglevel Error
+	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -cslog $(PROJECTROOT)data/test.log -loglevel Error
 
 analysis:
 	psql cselo -f scripts/analysis.sql
