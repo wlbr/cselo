@@ -35,6 +35,24 @@ func testsetup() {
 
 }
 
+func testsetup2() {
+	testfile = "../../data/test.log"
+
+	//processor := processors.NewCsgoLogProcessor(tconfig)
+	// if s, e := sinks.NewInMemoryCounterSink(tconfig, "Jagger"); e == nil {
+	// 	processor.AddSink(s)
+	// }
+
+	/*emitter := elo.NewFileEmitter(tconfig)
+
+	emitter.AddFilter(&elo.AllBotsFilter{})
+	emitter.AddFilter(&elo.UnknownFilter{})
+	emitter.AddProcessor(processor)
+
+	emitter.Loop()*/
+
+}
+
 func testteardown() {
 	defer config.CleanUp()
 
