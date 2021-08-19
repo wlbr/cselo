@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 //"Das Schnitzel<214><BOT><CT>" blinded for 2.39 by "Tina<217><BOT><CT>" from flashbang entindex 156

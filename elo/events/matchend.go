@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 type MatchEnd struct {

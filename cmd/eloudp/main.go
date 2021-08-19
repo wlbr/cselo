@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wlbr/cs-elo/elo"
-	"github.com/wlbr/cs-elo/elo/processors"
-	"github.com/wlbr/cs-elo/elo/sinks"
+	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/processors"
+	"github.com/wlbr/cselo/elo/sinks"
 )
 
 var (

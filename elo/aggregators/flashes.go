@@ -3,7 +3,7 @@ package aggregators
 import (
 	"time"
 
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 type Interval struct {
@@ -26,4 +26,3 @@ type Flashes struct {
 	timespan *Interval
 	stats    []*flashesPerPlayer
 }
-

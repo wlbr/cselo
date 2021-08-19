@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 
 	"github.com/jackc/pgx/v4"
 )

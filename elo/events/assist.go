@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/wlbr/commons/log"
-	"github.com/wlbr/cs-elo/elo"
+	"github.com/wlbr/cselo/elo"
 )
 
 //"Tina<217><BOT><CT>" assisted killing "Franzi<216><BOT><TERRORIST>"
