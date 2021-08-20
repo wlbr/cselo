@@ -9,16 +9,16 @@ type InMemoryCounterSink struct {
 	Player           string
 	AllKills         []*events.Kill
 	PlayersKills     []*events.Kill
-	allassists       []*events.Assist
-	playersassists   []*events.Assist
-	allplantings     []*events.Planted
-	playersplantings []*events.Planted
-	allbombings      []*events.Bombed
-	playersbombings  []*events.Bombed
-	alldefuses       []*events.Defuse
-	playersdefuses   []*events.Defuse
-	allrescues       []*events.HostageRescued
-	playersrescues   []*events.HostageRescued
+	Allassists       []*events.Assist
+	Playersassists   []*events.Assist
+	Allplantings     []*events.Planted
+	Playersplantings []*events.Planted
+	Allbombings      []*events.Bombed
+	Playersbombings  []*events.Bombed
+	Alldefuses       []*events.Defuse
+	Playersdefuses   []*events.Defuse
+	Allrescues       []*events.HostageRescued
+	Playersrescues   []*events.HostageRescued
 }
 
 func NewInMemoryCounterSink(cfg *elo.Config, playername string) (*InMemoryCounterSink, error) {
@@ -33,33 +33,39 @@ func (s *InMemoryCounterSink) HandleKillEvent(e *events.Kill) {
 }
 
 func (s *InMemoryCounterSink) HandleAssistEvent(e *events.Assist) {
-	s.allassists = append(s.allassists, e)
+	s.Allassists = append(s.Allassists, e)
 	if s.Player == e.Subject.Name {
-		s.playersassists = append(s.playersassists, e)
+		s.Playersassists = append(s.Playersassists, e)
 	}
 }
 func (s *InMemoryCounterSink) HandleBlindedEvent(e *events.Blinded) {}
 func (s *InMemoryCounterSink) HandleGrenadeEvent(e *events.Grenade) {}
-func (s *InMemoryCounterSink) HandlePlantedEvent(e *events.Planted) {}
+
+func (s *InMemoryCounterSink) HandlePlantedEvent(e *events.Planted) {
+	s.Allplantings = append(s.Allplantings, e)
+	if s.Player == e.Subject.Name {
+		s.Playersplantings = append(s.Playersplantings, e)
+	}
+}
 
 func (s *InMemoryCounterSink) HandleDefuseEvent(e *events.Defuse) {
-	s.alldefuses = append(s.alldefuses, e)
+	s.Alldefuses = append(s.Alldefuses, e)
 	if s.Player == e.Subject.Name {
-		s.playersdefuses = append(s.playersdefuses, e)
+		s.Playersdefuses = append(s.Playersdefuses, e)
 	}
 }
 
 func (s *InMemoryCounterSink) HandleBombedEvent(e *events.Bombed) {
-	s.allbombings = append(s.allbombings, e)
+	s.Allbombings = append(s.Allbombings, e)
 	if s.Player == e.Subject.Name {
-		s.playersbombings = append(s.playersbombings, e)
+		s.Playersbombings = append(s.Playersbombings, e)
 	}
 }
 
 func (s *InMemoryCounterSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
-	s.allrescues = append(s.allrescues, e)
+	s.Allrescues = append(s.Allrescues, e)
 	if s.Player == e.Subject.Name {
-		s.playersrescues = append(s.playersrescues, e)
+		s.Playersrescues = append(s.Playersrescues, e)
 	}
 }
 

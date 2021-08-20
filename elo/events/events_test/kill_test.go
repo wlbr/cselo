@@ -1,7 +1,6 @@
 package events
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,21 +30,12 @@ func countKillsPerPlayer(p string) int {
 	return playerskills
 }
 
-func TestKillsPerPlayerByDB(t *testing.T) {
-	var dbkillcount int
-	player := "Jagger"
+func TestKillsPerPlayerInMemory(t *testing.T) {
 	killcount := countKillsPerPlayer(player)
 
-	row := store.Db.QueryRow(context.Background(), "select count(kills.id) from kills "+
-		"left join players on actor=players.id "+
-		"where players.initialname=$1;", player)
-	err := row.Scan(&dbkillcount)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	if killcount != dbkillcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), killcount, dbkillcount)
+	count := len(counter.PlayersKills)
+	if killcount != count {
+		t.Errorf("%s failed: filecount %d != count %d", t.Name(), killcount, count)
 	}
 }
 
@@ -70,18 +60,11 @@ func countAllKills() int {
 	return allkills
 }
 
-func TestAllKillsByDB(t *testing.T) {
-	var dbkillcount int
+func TestAllKillsInMemory(t *testing.T) {
 	killcount := countAllKills()
 
-	row := store.Db.QueryRow(context.Background(), "select count(kills.id) from kills "+
-		"left join players on actor=players.id")
-	err := row.Scan(&dbkillcount)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	if killcount != dbkillcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), killcount, dbkillcount)
+	count := len(counter.AllKills)
+	if killcount != count {
+		t.Errorf("%s failed: filecount %d != count %d", t.Name(), killcount, count)
 	}
 }

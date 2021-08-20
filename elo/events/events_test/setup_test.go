@@ -6,25 +6,50 @@ import (
 	"time"
 
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/processors"
+	"github.com/wlbr/cselo/elo/sinks"
 	"github.com/wlbr/cselo/elo/sources/postgresql"
 )
 
 var config *elo.Config
 var store *postgresql.Postgres
 var testfile string
+var player string = "Jagger"
+
+var counter *sinks.InMemoryCounterSink
 
 func TestMain(m *testing.M) {
 	testsetup()
+	testsetupDB()
 	code := m.Run()
 	testteardown()
 	os.Exit(code)
 }
 
 func testsetup() {
-	testfile = "../../data/test.log"
 
 	config = new(elo.Config)
 	config.Initialize("Test", time.Now().Format(time.ANSIC))
+
+	testfile = config.Elo.CsLogFileName
+
+	processor := processors.NewCsgoLogProcessor(config)
+	if s, e := sinks.NewInMemoryCounterSink(config, player); e == nil {
+		processor.AddSink(s)
+		counter = s
+	}
+
+	emitter := elo.NewFileEmitter(config)
+
+	emitter.AddFilter(&elo.AllBotsFilter{})
+	emitter.AddFilter(&elo.UnknownFilter{})
+	emitter.AddProcessor(processor)
+
+	emitter.Loop()
+
+}
+
+func testsetupDB() {
 
 	// db tests
 	var err error
@@ -35,25 +60,6 @@ func testsetup() {
 
 }
 
-func testsetup2() {
-	testfile = "../../data/test.log"
-
-	//processor := processors.NewCsgoLogProcessor(tconfig)
-	// if s, e := sinks.NewInMemoryCounterSink(tconfig, "Jagger"); e == nil {
-	// 	processor.AddSink(s)
-	// }
-
-	/*emitter := elo.NewFileEmitter(tconfig)
-
-	emitter.AddFilter(&elo.AllBotsFilter{})
-	emitter.AddFilter(&elo.UnknownFilter{})
-	emitter.AddProcessor(processor)
-
-	emitter.Loop()*/
-
-}
-
 func testteardown() {
 	defer config.CleanUp()
-
 }

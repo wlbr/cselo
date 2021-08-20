@@ -1,7 +1,6 @@
 package events
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,21 +30,13 @@ func countAssistsPerPlayer(p string) int {
 	return playersassists
 }
 
-func TestAssistsPerPlayerByDB(t *testing.T) {
-	var dbcount int
-	player := "Jagger"
+func TestAssistsPerPlayerInMemory(t *testing.T) {
 	filecount := countAssistsPerPlayer(player)
 
-	row := store.Db.QueryRow(context.Background(), "select count(assists.id) from assists "+
-		"left join players on actor=players.id "+
-		"where players.initialname=$1;", player)
-	err := row.Scan(&dbcount)
-	if err != nil {
-		panic(err.Error())
-	}
+	count := len(counter.Playersassists)
 
-	if filecount != dbcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, dbcount)
+	if filecount != count {
+		t.Errorf("%s failed: filecount %d != count %d", t.Name(), filecount, count)
 	}
 }
 
@@ -70,18 +61,12 @@ func countAllAssists() int {
 	return allassists
 }
 
-func TestAllAssistsByDB(t *testing.T) {
-	var dbcount int
+func TestAllAssistsInMemory(t *testing.T) {
 	filecount := countAllAssists()
 
-	row := store.Db.QueryRow(context.Background(), "select count(assists.id) from assists "+
-		"left join players on actor=players.id;")
-	err := row.Scan(&dbcount)
-	if err != nil {
-		panic(err.Error())
-	}
+	count := len(counter.Allassists)
 
-	if filecount != dbcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, dbcount)
+	if filecount != count {
+		t.Errorf("%s failed: filecount %d != count %d", t.Name(), filecount, count)
 	}
 }

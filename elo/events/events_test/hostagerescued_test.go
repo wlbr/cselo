@@ -1,7 +1,6 @@
 package events
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,21 +30,13 @@ func countHostageRescuePerPlayer(p string) int {
 	return playersrescues
 }
 
-func TestHostageRescuesPerPlayerByDB(t *testing.T) {
-	var dbcount int
-	player := "Jagger"
+func TestHostageRescuesPerPlayerInMemory(t *testing.T) {
 	filecount := countHostageRescuePerPlayer(player)
 
-	row := store.Db.QueryRow(context.Background(), "select count(scoreaction.id) from scoreaction "+
-		"left join players on actor=players.id "+
-		"where actiontype='rescue' and players.initialname=$1;", player)
-	err := row.Scan(&dbcount)
-	if err != nil {
-		panic(err.Error())
-	}
+	count := len(counter.Playersrescues)
 
-	if filecount != dbcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, dbcount)
+	if filecount != count {
+		t.Errorf("%s failed: filecount %d != count %d", t.Name(), filecount, count)
 	}
 }
 
@@ -70,20 +61,12 @@ func countAllHostageRescues() int {
 	return allrescues
 }
 
-func TestAllHostageRescuesByDB(t *testing.T) {
-	var dbcount int
-
+func TestAllHostageRescuesInMemory(t *testing.T) {
 	filecount := countAllHostageRescues()
 
-	row := store.Db.QueryRow(context.Background(), "select count(scoreaction.id) from scoreaction "+
-		"left join players on actor=players.id "+
-		"where actiontype='rescue';")
-	err := row.Scan(&dbcount)
-	if err != nil {
-		panic(err.Error())
-	}
+	count := len(counter.Allrescues)
 
-	if filecount != dbcount {
-		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, dbcount)
+	if filecount != count {
+		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, count)
 	}
 }
