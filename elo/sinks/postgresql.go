@@ -258,9 +258,9 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 	log.Info("Writing game start event to PostgreSQL database: %+v", e)
 	var id int64
 	err := s.db.QueryRow(context.Background(),
-		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp) VALUES ($1, $2, $3, $4)
+		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb) VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`,
-		e.MapFullName, e.MapName, e.Time, e.Time).Scan(&id)
+		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0).Scan(&id)
 	e.Server.CurrentMatch.ID = id
 	if err != nil {
 		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)

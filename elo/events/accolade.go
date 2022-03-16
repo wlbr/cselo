@@ -27,7 +27,7 @@ type Accolade struct {
 // score  sniperkills  utilitydamage
 
 //ACCOLADE, FINAL: {mvps},	Jacky<8>,	VALUE: 3.000000,	POS: 1,	SCORE: 24.000000
-var accoladerexrex = regexp.MustCompile(`^ACCOLADE,\s+FINAL:\s+{(.+)},\s+(.+)<(.+)>,\s+VALUE:\s+(.+),\s+POS:\s+(.+),\s+SCORE:\s+(.+)$`)
+var accoladerexrex = regexp.MustCompile(`ACCOLADE,\s+FINAL:\s+{(.+)},\s+(.+)<(.+)>,\s+VALUE:\s+(.+),\s+POS:\s+(.+),\s+SCORE:\s+(.+)`)
 
 func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (a *Accolade) {
 	if sm := accoladerexrex.FindStringSubmatch(message); sm != nil {

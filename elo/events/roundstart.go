@@ -14,7 +14,7 @@ type RoundStart struct {
 }
 
 //World triggered "Round_Start"
-var roundstartdrex = regexp.MustCompile(`^World triggered "Round_Start"$`)
+var roundstartdrex = regexp.MustCompile(`World triggered "Round_Start"`)
 
 func NewRoundStartEvent(server *elo.Server, t time.Time, message string) (e *RoundStart) {
 	if sm := roundstartdrex.FindStringSubmatch(message); sm != nil {

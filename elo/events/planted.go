@@ -16,7 +16,7 @@ type Planted struct {
 }
 
 //"AHA<18><STEAM_1:1:689719><TERRORIST>" triggered "Planted_The_Bomb"
-var plantedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" triggered "Planted_The_Bomb"$`)
+var plantedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Planted_The_Bomb"`)
 
 func NewPlantedEvent(server *elo.Server, t time.Time, message string) (e *Planted) {
 	if sm := plantedrex.FindStringSubmatch(message); sm != nil {

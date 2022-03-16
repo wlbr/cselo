@@ -23,7 +23,7 @@ type Grenade struct {
 //"Jagger<19><STEAM_1:0:681607><CT>" threw hegrenade [1303 -496 -638]
 //"KiF Charlies Silence<16><STEAM_1:0:710013><TERRORIST>" threw smokegrenade [906 -291 -638]
 //"AHA<199><STEAM_1:1:689719><CT>" threw molotov [1020 -969 -766]
-var grenadedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" threw (.+) \[.+\]((.+) entindex (.+)\))?$`)
+var grenadedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" threw (.+) \[.+\]((.+) entindex (.+)\))?`)
 
 func NewGrenadeEvent(server *elo.Server, t time.Time, message string) (e *Grenade) {
 	if sm := grenadedrex.FindStringSubmatch(message); sm != nil {

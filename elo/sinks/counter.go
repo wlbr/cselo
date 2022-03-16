@@ -19,6 +19,7 @@ type InMemoryCounterSink struct {
 	Playersdefuses   []*events.Defuse
 	Allrescues       []*events.HostageRescued
 	Playersrescues   []*events.HostageRescued
+	Matches          []*elo.Match
 }
 
 func NewInMemoryCounterSink(cfg *elo.Config, playername string) (*InMemoryCounterSink, error) {
@@ -69,8 +70,12 @@ func (s *InMemoryCounterSink) HandleHostageRescuedEvent(e *events.HostageRescued
 	}
 }
 
+func (s *InMemoryCounterSink) HandleMatchEndEvent(e *events.MatchEnd) {
+	m := e.Server.CurrentMatch
+	s.Matches = append(s.Matches, m)
+}
+
+func (s *InMemoryCounterSink) HandleMatchStartEvent(e *events.MatchStart) {}
 func (s *InMemoryCounterSink) HandleRoundStartEvent(e *events.RoundStart) {}
 func (s *InMemoryCounterSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
-func (s *InMemoryCounterSink) HandleMatchStartEvent(e *events.MatchStart) {}
-func (s *InMemoryCounterSink) HandleMatchEndEvent(e *events.MatchEnd)     {}
 func (s *InMemoryCounterSink) HandleAccoladeEvent(e *events.Accolade)     {}

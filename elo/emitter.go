@@ -32,10 +32,11 @@ func filter(em Emitter, m string) bool {
 
 func shortenMessage(str string) (timestamp time.Time, message string, err error) {
 	//str := string(buf)
-	start := strings.IndexByte(str, ' ') + 1
+	start := strings.IndexByte(str, ' ')
 	if start == -1 {
 		return timestamp, message, fmt.Errorf("Logline not in standard format. Logline: '%s'", str)
 	}
+	start++ //skip the initial space
 	dend := start + 21
 	if len(str) < dend || str[dend] != ':' {
 		return timestamp, message, fmt.Errorf("Logline not in standard format, did not find end of date. Logline: '%s'", str)

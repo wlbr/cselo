@@ -16,7 +16,7 @@ type Defuse struct {
 }
 
 //"Jagger<19><STEAM_1:0:681607><CT>" triggered "Defused_The_Bomb"
-var defusedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" triggered "Defused_The_Bomb"$`)
+var defusedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Defused_The_Bomb"`)
 
 func NewDefuseEvent(server *elo.Server, t time.Time, message string) (e *Defuse) {
 	if sm := defusedrex.FindStringSubmatch(message); sm != nil {

@@ -26,8 +26,8 @@ type Match struct {
 	MapGroup        string
 	MapFullName     string
 	MapName         string
-	ScoreA          int64
-	ScoreB          int64
+	ScoreA          int
+	ScoreB          int
 	Start           time.Time
 	End             time.Time
 	Duration        time.Duration

@@ -12,7 +12,7 @@ import (
 
 //"Das Schnitzel<214><BOT><CT>" blinded for 2.39 by "Tina<217><BOT><CT>" from flashbang entindex 156
 //"Jagger<19><STEAM_1:0:681607><TERRORIST>" blinded for 4.18 by "Dackel<2><STEAM_1:0:1770206><CT>" from flashbang entindex 209
-var blindedrex = regexp.MustCompile(`^"(.+)<(.+)><(.+)><(.+)>" blinded for (.+) by "(.+)<(.+)><(.+)><(.+)>" from flashbang entindex (\d+).*$`)
+var blindedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" blinded for (.+) by "(.+)<(.+)><(.+)><(.+)>" from flashbang entindex (\d+).*`)
 
 type Blinded struct {
 	BaseEvent

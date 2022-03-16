@@ -22,10 +22,10 @@ build: #generate
 run:
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/latest.log
 
-test: #recreatetables  #generate
-#	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
+test: recreatetables
+	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
 	@echo Running test job...
-	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -cslog $(PROJECTROOT)data/test.log -loglevel Error
+	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -cslog $(PROJECTROOT)data/test.log -loglevel Error -player Jagger
 
 analysis:
 	psql cselo -f scripts/analysis.sql
@@ -44,8 +44,8 @@ initelodb: resetdb recreatetables
 
 wipe: initelodb clean
 
-#newpostgresdb:
-#	initdb -D $(DBPATH)
+newpostgresdb:
+	initdb -D $(DBPATH)
 
 startdb:
 	#postgres -D $(DBPATH)

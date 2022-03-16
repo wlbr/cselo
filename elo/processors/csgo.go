@@ -1,18 +1,18 @@
 package processors
 
 import (
-	"time"
-
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
 	"github.com/wlbr/cselo/elo/sinks"
+	"time"
 )
 
 type CsgoLog struct {
 	config  *elo.Config
 	sinks   []sinks.Sink
 	servers map[string]*elo.Server
+	jaggerkills int
 }
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
@@ -33,6 +33,23 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m strin
 	// 	srv = &elo.Server{IP: server}
 	// 	p.servers[server] = srv
 	// }
+	if srv.CurrentMatch == nil {
+		match := &elo.Match{MapFullName: "unknown", MapName: "unknown", Start: time.Now(), Server: srv}
+		srv.CurrentMatch = match
+		mse := &events.MatchStart{
+			BaseEvent: events.BaseEvent{
+				Server:  srv,
+				Time:    time.Now(),
+				Message: "Missed MatchStart, guessing new one.",
+			},
+			MapFullName: "unknown",
+			MapName:     "unknown",
+		}
+		for _, sink := range p.sinks {
+			sink.HandleMatchStartEvent(mse)
+		}
+
+	}
 	if e := events.NewKillEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {
 			s.HandleKillEvent(e)

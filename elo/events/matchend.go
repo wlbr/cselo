@@ -17,8 +17,8 @@ type MatchEnd struct {
 	MapGroup    string
 	MapFullName string
 	MapName     string
-	ScoreA      int64
-	ScoreB      int64
+	ScoreA      int
+	ScoreB      int
 	MatchStart  time.Time
 	MatchEnd    time.Time
 	Duration    time.Duration
@@ -49,8 +49,9 @@ func NewMatchEndEvent(server *elo.Server, t time.Time, message string) (e *Match
 		server.CurrentMatch.MapGroup = gom[2]
 		server.CurrentMatch.MapFullName = gom[3]
 		server.CurrentMatch.MapName = mn
-		server.CurrentMatch.ScoreA = int64(scorea)
-		server.CurrentMatch.ScoreB = int64(scoreb)
+		server.CurrentMatch.ScoreA = scorea
+		server.CurrentMatch.ScoreB = scoreb
+
 		server.CurrentMatch.End = t
 		server.CurrentMatch.Duration = d
 
@@ -64,6 +65,8 @@ func NewMatchEndEvent(server *elo.Server, t time.Time, message string) (e *Match
 	return e
 }
 
+//Game Over: casual 2187570436 workshop/2209334999/de_elysion score 2:8 after 9 min
+//Game Over: casual 2187570436 de_crete score 2:8 after 8 min
 //Game Over: competitive default de_rats_brb score 8:3 after 16 min
 //Game Over: competitive default de_shortnuke score 1:8 after 5 min
 //Game Over: casual 2187570436 workshop/125444404/cs_office score 8:0 after 9 min

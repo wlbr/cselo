@@ -13,7 +13,7 @@ var playersassists int = -1
 
 func countAssistsPerPlayer(p string) int {
 	if playersassists == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+assisted.+<STEAM_" %s |wc -l`, p, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM_.+ assisted.+<STEAM_" %s |wc -l`, p, testfile))
 
 		err := c.Execute()
 		if err != nil {
@@ -44,7 +44,7 @@ var allassists int = -1
 
 func countAllAssists() int {
 	if allassists == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+assisted.+<STEAM_" %s |wc -l`, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+ assisted.+<STEAM_" %s |wc -l`, testfile))
 
 		err := c.Execute()
 		if err != nil {

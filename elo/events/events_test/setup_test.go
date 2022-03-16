@@ -1,6 +1,7 @@
 package events
 
 import (
+	"flag"
 	"os"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ import (
 var config *elo.Config
 var store *postgresql.Postgres
 var testfile string
-var player string = "Jagger"
+var player string
 
 var counter *sinks.InMemoryCounterSink
 
@@ -27,6 +28,7 @@ func TestMain(m *testing.M) {
 }
 
 func testsetup() {
+	flag.StringVar(&player, "player", "Jagger", "Player to try the tests on.")
 
 	config = new(elo.Config)
 	config.Initialize("Test", time.Now().Format(time.ANSIC))
