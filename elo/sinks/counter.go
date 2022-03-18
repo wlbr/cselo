@@ -75,7 +75,9 @@ func (s *InMemoryCounterSink) HandleMatchEndEvent(e *events.MatchEnd) {
 	s.Matches = append(s.Matches, m)
 }
 
-func (s *InMemoryCounterSink) HandleMatchStartEvent(e *events.MatchStart) {}
-func (s *InMemoryCounterSink) HandleRoundStartEvent(e *events.RoundStart) {}
-func (s *InMemoryCounterSink) HandleRoundEndEvent(e *events.RoundEnd)     {}
-func (s *InMemoryCounterSink) HandleAccoladeEvent(e *events.Accolade)     {}
+func (s *InMemoryCounterSink) HandleMatchStatusEvent(e *events.MatchStatus)   {}
+func (s *InMemoryCounterSink) HandleMatchStartEvent(e *events.MatchStart)     {}
+func (s *InMemoryCounterSink) HandleRoundStartEvent(e *events.RoundStart)     {}
+func (s *InMemoryCounterSink) HandleRoundEndEvent(e *events.RoundEnd)         {}
+func (s *InMemoryCounterSink) HandleAccoladeEvent(e *events.Accolade)         {}
+func (s *InMemoryCounterSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {}

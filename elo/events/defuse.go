@@ -11,6 +11,7 @@ import (
 
 type Defuse struct {
 	BaseEvent
+
 	Subject     *elo.Player
 	subjectTeam string
 }

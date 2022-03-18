@@ -1,17 +1,19 @@
 package processors
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
 	"github.com/wlbr/cselo/elo/sinks"
-	"time"
 )
 
 type CsgoLog struct {
-	config  *elo.Config
-	sinks   []sinks.Sink
-	servers map[string]*elo.Server
+	config      *elo.Config
+	sinks       []sinks.Sink
+	servers     map[string]*elo.Server
 	jaggerkills int
 }
 
@@ -110,15 +112,26 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m strin
 		}
 		return
 	}
+	oldmatch := srv.CurrentMatch
 	if e := events.NewMatchStartEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchStartEvent(e)
+		}
+		c := events.NewMatchCleanUpEvent(srv, t, fmt.Sprintf("MatchCleanUp: Check for empty match %d", oldmatch.ID), oldmatch)
+		for _, s := range p.sinks {
+			s.HandleMatchCleanUpEvent(c)
 		}
 		return
 	}
 	if e := events.NewMatchEndEvent(srv, t, m); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchEndEvent(e)
+		}
+		return
+	}
+	if e := events.NewMatchStatusEvent(srv, t, m); e != nil {
+		for _, s := range p.sinks {
+			s.HandleMatchStatusEvent(e)
 		}
 		return
 	}

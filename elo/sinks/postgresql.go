@@ -258,12 +258,26 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 	log.Info("Writing game start event to PostgreSQL database: %+v", e)
 	var id int64
 	err := s.db.QueryRow(context.Background(),
-		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb) VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb, rounds) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`,
-		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0).Scan(&id)
+		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0, 0).Scan(&id)
 	e.Server.CurrentMatch.ID = id
 	if err != nil {
 		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)
+	}
+}
+
+// "INSERT INTO matches (mapfullname, mapname, scorea, scoreb, rounds, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+// e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Rounds, e.Time)
+func (s *PostgresSink) HandleMatchStatusEvent(e *events.MatchStatus) {
+	log.Info("Writing match status event to PostgreSQL database: %+v", e)
+	m := e.Server.CurrentMatch
+	_, err := s.db.Exec(context.Background(), `UPDATE matches
+		SET  mapfullname=$2, mapname=$3, scorea=$4, scoreb=$5, rounds=$6, timestmp=$7
+		WHERE id=$1`,
+		m.ID, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Rounds, e.Time)
+	if err != nil {
+		log.Error("Cannot store MATCHSTATUS in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
 }
 
@@ -279,5 +293,45 @@ func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 		e.Server.CurrentMatch.ID, subject.ID, e.Type, e.Position, e.Value, e.Score, e.Time)
 	if err != nil {
 		log.Error("Cannot store ACCOLADE in PostgresQL database: %v", err)
+	}
+}
+
+func (s *PostgresSink) cascadedDeleteMatch(m *elo.Match, tablename string) {
+	// Delete all players
+	if _, err := s.db.Exec(context.Background(),
+		fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID); err != nil {
+		log.Error("Cannot clean table %s for match-to-be-deleted %v from PostgresQL database: %v", tablename, m.ID, err)
+	}
+}
+
+func (s *PostgresSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {
+	var count int
+	s.db.QueryRow(context.Background(), "SELECT COUNT(kills.id) FROM kills WHERE match=$1", e.Match.ID).Scan(&count)
+	if count == 0 {
+		log.Info("Cleaning empty match: %+v", e.Match.ID)
+		tables := []string{"accolade", "assists", "blindings", "grenadethrows", "kills", "plantings", "scoreaction"}
+		tx, err := s.db.Begin(context.Background())
+		if err != nil {
+			log.Error("Cannot open transaction for deletion of match %d : %v", e.Match.ID, err)
+		}
+		defer tx.Rollback(context.Background())
+
+		if err != nil {
+			return
+		}
+
+		for _, t := range tables {
+			s.cascadedDeleteMatch(e.Match, t)
+		}
+		if _, err := s.db.Exec(context.Background(), "DELETE FROM matches WHERE id=$1", e.Match.ID); err != nil {
+			log.Error("Cannot clean match-to-be-deleted %v from PostgresQL database: %v", e.Match.ID, err)
+		}
+		err = tx.Commit(context.Background())
+		if err != nil {
+			log.Error("Cannot commit transaction for deletion of match %d : %v", e.Match.ID, err)
+		}
+
+	} else {
+		log.Info("NOT Cleaning empty match: %+v", e.Match.ID)
 	}
 }
