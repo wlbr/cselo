@@ -1,8 +1,6 @@
 package sinks
 
-import (
-	"github.com/wlbr/cselo/elo/events"
-)
+import "github.com/wlbr/cselo/elo/events"
 
 type Sink interface {
 	HandleKillEvent(e *events.Kill)
@@ -16,8 +14,6 @@ type Sink interface {
 	HandleRoundStartEvent(e *events.RoundStart)
 	HandleRoundEndEvent(e *events.RoundEnd)
 	HandleMatchStartEvent(e *events.MatchStart)
-	HandleMatchStatusEvent(e *events.MatchStatus)
 	HandleMatchEndEvent(e *events.MatchEnd)
 	HandleAccoladeEvent(e *events.Accolade)
-	HandleMatchCleanUpEvent(e *events.MatchCleanUp)
 }

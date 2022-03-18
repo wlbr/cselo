@@ -30,7 +30,6 @@ CREATE TABLE matches (
     mapname varchar(40),
     scorea int,
     scoreb int,
-    rounds int,
     duration interval(6),
     matchstart timestamp,
     matchend timestamp,
