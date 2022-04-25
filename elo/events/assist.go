@@ -3,7 +3,6 @@ package events
 import (
 	"fmt"
 	"regexp"
-	"time"
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
@@ -14,18 +13,18 @@ import (
 var assistrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" assisted killing "(.+)<(.+)><(.+)><(.+)>"`)
 
 type Assist struct {
-	BaseEvent
+	*elo.BaseEvent
 	Subject     *elo.Player
 	subjectTeam string
 	Object      *elo.Player
 	objectTeam  string
 }
 
-func NewAssistEvent(server *elo.Server, t time.Time, message string) (e *Assist) {
-	if sm := assistrex.FindStringSubmatch(message); sm != nil {
+func NewAssistEvent(b *elo.BaseEvent) (e *Assist) {
+	if sm := assistrex.FindStringSubmatch(b.Message); sm != nil {
 		e = &Assist{Subject: elo.GetPlayer(sm[1], sm[3]), subjectTeam: sm[4],
 			Object: elo.GetPlayer(sm[5], sm[7]), objectTeam: sm[8],
-			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+			BaseEvent: b}
 		log.Info("Created event: %+v", e)
 	}
 	return e

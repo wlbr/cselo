@@ -1,9 +1,9 @@
 package elo
 
-import (
-	"time"
-)
+import "sync"
 
 type Processor interface {
-	Dispatch(em Emitter, s *Server, t time.Time, m string)
+	AddWaitGroup(wg *sync.WaitGroup)
+	AddJob(b *BaseEvent)
+	Loop()
 }

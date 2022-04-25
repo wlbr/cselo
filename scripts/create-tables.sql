@@ -2,7 +2,6 @@
 
 
 
-
 DROP TABLE IF EXISTS players CASCADE;
 
 CREATE TABLE players (
@@ -13,8 +12,9 @@ CREATE TABLE players (
   avatar varchar(200)
  	);
 
---ALTER TABLE players
---  OWNER TO cselo;
+
+ALTER TABLE players
+  OWNER TO cseloapp;
 
 
 GRANT SELECT ON TABLE players TO cselojavaui;
@@ -28,16 +28,18 @@ CREATE TABLE matches (
     mapgroup varchar(40),
     mapfullname varchar(80),
     mapname varchar(40),
-    scorea int,
-    scoreb int,
+    scorea int default 0,
+    scoreb int default 0,
+    rounds int default 0,
     duration interval(6),
     matchstart timestamp,
     matchend timestamp,
-    timestmp timestamp
+    timestmp timestamp,
+    completed boolean default false
 );
 
--- ALTER TABLE matches
---  OWNER TO cseloapp;
+ALTER TABLE matches
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE matches TO cselojavaui;
 
@@ -49,13 +51,13 @@ CREATE TABLE kills (
     match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     victim int REFERENCES players (id),
-    headshot boolean,
+    headshot boolean default false,
     weapon varchar(40),
     timestmp timestamp
 );
 
--- ALTER TABLE kills
---  OWNER TO cseloapp;
+ALTER TABLE kills
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE kills TO cselojavaui;
 
@@ -70,25 +72,25 @@ CREATE TABLE assists (
     timestmp timestamp
 );
 
--- ALTER TABLE assists
---  OWNER TO cseloapp;
+ ALTER TABLE assists
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE assists TO cselojavaui;
 
 
-DROP TABLE IF EXISTS plantings CASCADE;
+-- DROP TABLE IF EXISTS plantings CASCADE;
 
-CREATE TABLE plantings (
-    id serial NOT NULL primary key,
-    match int REFERENCES matches (id),
-    actor int REFERENCES players (id),
-    timestmp timestamp
-);
+-- CREATE TABLE plantings (
+--     id serial NOT NULL primary key,
+--     match int REFERENCES matches (id),
+--     actor int REFERENCES players (id),
+--     timestmp timestamp
+-- );
 
--- ALTER TABLE plantings
---  OWNER TO cseloapp;
+-- -- ALTER TABLE plantings
+-- --  OWNER TO cseloapp;
 
-GRANT SELECT ON TABLE plantings TO cselojavaui;
+-- GRANT SELECT ON TABLE plantings TO cselojavaui;
 
 
 DROP TABLE IF EXISTS scoreaction CASCADE;
@@ -101,8 +103,8 @@ CREATE TABLE scoreaction (
     timestmp timestamp
 );
 
--- ALTER TABLE scoreaction
---  OWNER TO cseloapp;
+ALTER TABLE scoreaction
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE scoreaction TO cselojavaui;
 
@@ -119,8 +121,8 @@ CREATE TABLE blindings (
     timestmp timestamp
 );
 
--- ALTER TABLE blindings
---  OWNER TO cseloapp;
+ALTER TABLE blindings
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE blindings TO cselojavaui;
 
@@ -135,8 +137,8 @@ CREATE TABLE grenadethrows (
     timestmp timestamp
 );
 
--- ALTER TABLE grenadethrows
---  OWNER TO cseloapp;
+ALTER TABLE grenadethrows
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE grenadethrows TO cselojavaui;
 
@@ -148,17 +150,15 @@ CREATE TABLE accolade (
     match int REFERENCES matches (id),
     actor int REFERENCES players (id),
     accoladetype varchar(20),
-    position int,
+    position int default 0,
     accoladevalue float,
-    score float,
+    score float default 0,
     timestmp timestamp
 );
 
--- ALTER TABLE accolade
---  OWNER TO cseloapp;
+ALTER TABLE accolade
+  OWNER TO cseloapp;
 
 GRANT SELECT ON TABLE accolade TO cselojavaui;
-
-
 
 

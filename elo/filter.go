@@ -2,6 +2,7 @@ package elo
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/wlbr/commons/log"
 )
@@ -23,7 +24,7 @@ func (f *AllBotsFilter) String() string {
 }
 
 func (f *AllBotsFilter) Test(message string) bool {
-	if allbotsrex.MatchString(message) {
+	if allbotsrex.MatchString(message) && !strings.Contains(message, "Punting bot, server is hibernating") {
 		log.Info("AllBotsFilter: Filtered message '%s'", message)
 		return true
 	}

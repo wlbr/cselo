@@ -3,22 +3,25 @@ package sinks
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
+	"github.com/wlbr/cselo/net"
 )
 
 type PostgresSink struct {
-	config *elo.Config
-	db     *pgx.Conn
+	config  *elo.Config
+	db      *pgx.Conn
+	discord *net.DiscordSender
 }
 
-func NewPostgresSink(cfg *elo.Config) (*PostgresSink, error) {
+func NewPostgresSink(cfg *elo.Config, discord *net.DiscordSender) (*PostgresSink, error) {
 	log.Info("Creating new PostgreSQL sink")
 	var err error
-	s := &PostgresSink{config: cfg}
+	s := &PostgresSink{config: cfg, discord: discord}
 
 	//pg connectstring "postgres://user:password@host:port5432/dbname"
 	dbinfo := "postgres://"
@@ -246,9 +249,9 @@ func (s *PostgresSink) HandleMatchEndEvent(e *events.MatchEnd) {
 	log.Info("Writing game over event to PostgreSQL database: %+v", e)
 	m := e.Server.CurrentMatch
 	_, err := s.db.Exec(context.Background(), `UPDATE matches
-		SET gamemode=$2, mapgroup=$3, mapfullname=$4, mapname=$5, scorea=$6, scoreb=$7, duration=$8, matchend=$9, timestmp=$10
+		SET gamemode=$2, mapgroup=$3, mapfullname=$4, mapname=$5, scorea=$6, scoreb=$7, duration=$8, matchend=$9, timestmp=$10, completed=$11
 		WHERE id=$1`,
-		m.ID, m.GameMode, m.MapGroup, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time)
+		m.ID, m.GameMode, m.MapGroup, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time, e.Completed)
 	if err != nil {
 		log.Error("Cannot store MATCHEND in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
@@ -258,12 +261,32 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 	log.Info("Writing game start event to PostgreSQL database: %+v", e)
 	var id int64
 	err := s.db.QueryRow(context.Background(),
-		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb) VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb, rounds) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`,
-		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0).Scan(&id)
+		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0, 0).Scan(&id)
 	e.Server.CurrentMatch.ID = id
 	if err != nil {
 		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)
+	}
+}
+
+// "INSERT INTO matches (gamemode, mapgroup, mapfullname, mapname, scorea, scoreb, duration, matchend, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+// e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Duration, e.MatchEnd, e.Time)
+func (s *PostgresSink) HandleServerHibernationEvent(e *events.ServerHibernation) {
+
+}
+
+// "INSERT INTO matches (mapfullname, mapname, scorea, scoreb, rounds, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+// e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Rounds, e.Time)
+func (s *PostgresSink) HandleMatchStatusEvent(e *events.MatchStatus) {
+	log.Info("Writing match status event to PostgreSQL database: %+v", e)
+	m := e.Server.CurrentMatch
+	_, err := s.db.Exec(context.Background(), `UPDATE matches
+		SET  mapfullname=$2, mapname=$3, scorea=$4, scoreb=$5, rounds=$6, timestmp=$7
+		WHERE id=$1`,
+		m.ID, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Rounds, e.Time)
+	if err != nil {
+		log.Error("Cannot store MATCHSTATUS in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
 }
 
@@ -280,4 +303,62 @@ func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 	if err != nil {
 		log.Error("Cannot store ACCOLADE in PostgresQL database: %v", err)
 	}
+}
+
+func (s *PostgresSink) cascadedDeleteMatch(m *elo.Match, tablename string) {
+	// Delete all players
+	if _, err := s.db.Exec(context.Background(),
+		fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID); err != nil {
+		log.Error("Cannot clean table %s for match-to-be-deleted %v from PostgresQL database: %v", tablename, m.ID, err)
+	}
+}
+
+func (s *PostgresSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {
+	var count int
+	s.db.QueryRow(context.Background(), "SELECT COUNT(kills.id) FROM kills WHERE match=$1", e.Match.ID).Scan(&count)
+	if count == 0 {
+		log.Info("Cleaning empty match: %+v", e.Match.ID)
+		tables := []string{"accolade", "assists", "blindings", "grenadethrows", "kills", "scoreaction"} // "plantings",
+		tx, err := s.db.Begin(context.Background())
+		if err != nil {
+			log.Error("Cannot open transaction for deletion of match %d : %v", e.Match.ID, err)
+		}
+		defer tx.Rollback(context.Background())
+
+		if err != nil {
+			return
+		}
+
+		for _, t := range tables {
+			s.cascadedDeleteMatch(e.Match, t)
+		}
+		if _, err := s.db.Exec(context.Background(), "DELETE FROM matches WHERE id=$1", e.Match.ID); err != nil {
+			log.Error("Cannot clean match-to-be-deleted %v from PostgresQL database: %v", e.Match.ID, err)
+		}
+		err = tx.Commit(context.Background())
+		if err != nil {
+			log.Error("Cannot commit transaction for deletion of match %d : %v", e.Match.ID, err)
+		}
+
+	} else {
+		log.Info("NOT Cleaning empty match: %+v", e.Match.ID)
+		var matchstart, matchend time.Time
+		s.db.QueryRow(context.Background(), "SELECT matchstart, matchend FROM matches WHERE id=$1", e.Match.ID).Scan(&matchstart, &matchend)
+		if matchend.IsZero() {
+			matchend = e.Time
+			duration := matchend.Sub(matchstart)
+			log.Info("Setting matchend in match %d to %v", e.Match.ID, matchend)
+			_, err := s.db.Exec(context.Background(), "UPDATE matches SET matchend=$1, duration=$2 WHERE id=$3", matchend, duration, e.Match.ID)
+			if err != nil {
+				log.Error("cannot set  matchend in match %d to %v: %v", e.Match.ID, matchend, err)
+			}
+		}
+	}
+}
+
+func (s *PostgresSink) HandlePlayerConnectedEvent(e *events.PlayerConnected) {
+	log.Info("Writing player connected event to PostgreSQL database: %+v", e)
+	subject := s.GetOrStorePlayerbySteamID(e.Subject)
+	message := "Player '" + subject.Name + "' connected."
+	s.discord.Send(message)
 }

@@ -1,25 +1,31 @@
 package processors
 
 import (
+	"sync"
+
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
 	"github.com/wlbr/cselo/elo/sinks"
-	"time"
 )
 
 type CsgoLog struct {
-	config  *elo.Config
-	sinks   []sinks.Sink
-	servers map[string]*elo.Server
-	jaggerkills int
+	wg       *sync.WaitGroup
+	incoming chan *elo.BaseEvent
+	config   *elo.Config
+	sinks    []sinks.Sink
+	servers  map[string]*elo.Server
 }
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
 	p.servers = make(map[string]*elo.Server)
-
+	p.incoming = make(chan *elo.BaseEvent, 5000)
 	return p
+}
+
+func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
+	p.wg = wg
 }
 
 func (p *CsgoLog) AddSink(s sinks.Sink) {
@@ -27,19 +33,37 @@ func (p *CsgoLog) AddSink(s sinks.Sink) {
 	p.sinks = append(p.sinks, s)
 }
 
-func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m string) {
-	// srv, ok := p.servers[server]
+func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
+	p.incoming <- b
+}
+
+func (p *CsgoLog) Loop() {
+	p.wg.Add(1)
+	defer p.wg.Done()
+	for {
+		e := <-p.incoming
+		p.process(e)
+		if e.Message == "cselo:StopProcessing." {
+			break
+		}
+	}
+	defer log.Info("Finishing processor")
+}
+
+//func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
+func (p *CsgoLog) process(b *elo.BaseEvent) {
+	// b.Server, ok := p.servers[server]
 	// if ok {
-	// 	srv = &elo.Server{IP: server}
-	// 	p.servers[server] = srv
+	// 	b.Server = &elo.Server{IP: server}
+	// 	p.servers[server] = b.Server
 	// }
-	if srv.CurrentMatch == nil {
-		match := &elo.Match{MapFullName: "unknown", MapName: "unknown", Start: time.Now(), Server: srv}
-		srv.CurrentMatch = match
+	if b.Server.CurrentMatch == nil {
+		match := &elo.Match{MapFullName: "unknown", MapName: "unknown", Start: b.Time, Server: b.Server}
+		b.Server.CurrentMatch = match
 		mse := &events.MatchStart{
-			BaseEvent: events.BaseEvent{
-				Server:  srv,
-				Time:    time.Now(),
+			BaseEvent: &elo.BaseEvent{
+				Server:  b.Server,
+				Time:    b.Time,
 				Message: "Missed MatchStart, guessing new one.",
 			},
 			MapFullName: "unknown",
@@ -48,83 +72,110 @@ func (p *CsgoLog) Dispatch(em elo.Emitter, srv *elo.Server, t time.Time, m strin
 		for _, sink := range p.sinks {
 			sink.HandleMatchStartEvent(mse)
 		}
-
 	}
-	if e := events.NewKillEvent(srv, t, m); e != nil {
+	if e := events.NewKillEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleKillEvent(e)
 		}
 		return
 	}
-	if e := events.NewAssistEvent(srv, t, m); e != nil {
+	if e := events.NewAssistEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleAssistEvent(e)
 		}
 		return
 	}
-	if e := events.NewBlindedEvent(srv, t, m); e != nil {
+	if e := events.NewBlindedEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleBlindedEvent(e)
 		}
 		return
 	}
-	if e := events.NewGrenadeEvent(srv, t, m); e != nil {
+	if e := events.NewGrenadeEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleGrenadeEvent(e)
 		}
 		return
 	}
-	if e := events.NewBombedEvent(srv, t, m); e != nil {
+	if e := events.NewBombedEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleBombedEvent(e)
 		}
 		return
 	}
-	if e := events.NewDefuseEvent(srv, t, m); e != nil {
+	if e := events.NewDefuseEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleDefuseEvent(e)
 		}
 		return
 	}
-	if e := events.NewHostageRescuedEvent(srv, t, m); e != nil {
+	if e := events.NewHostageRescuedEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleHostageRescuedEvent(e)
 		}
 		return
 	}
-	if e := events.NewPlantedEvent(srv, t, m); e != nil {
+	if e := events.NewPlantedEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandlePlantedEvent(e)
 		}
 		return
 	}
-	if e := events.NewRoundStartEvent(srv, t, m); e != nil {
+	if e := events.NewRoundStartEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleRoundStartEvent(e)
 		}
 		return
 	}
-	if e := events.NewRoundEndEvent(srv, t, m); e != nil {
+	if e := events.NewRoundEndEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleRoundEndEvent(e)
 		}
 		return
 	}
-	if e := events.NewMatchStartEvent(srv, t, m); e != nil {
+	oldmatch := b.Server.CurrentMatch
+	if e := events.NewMatchStartEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchStartEvent(e)
 		}
+		//c := events.NewMatchCleanUpEvent(b.Server, e.Time, fmt.Sprintf("MatchCleanUp: Check for empty match %d", oldmatch.ID), oldmatch)
+		c := events.NewMatchCleanUpEvent(b, oldmatch)
+		for _, s := range p.sinks {
+			s.HandleMatchCleanUpEvent(c)
+		}
 		return
 	}
-	if e := events.NewMatchEndEvent(srv, t, m); e != nil {
+	if e := events.NewMatchEndEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchEndEvent(e)
 		}
 		return
 	}
-	if e := events.NewAccoladeEvent(srv, t, m); e != nil {
+	if e := events.NewServerHibernationEvent(b); e != nil {
+		for _, s := range p.sinks {
+			s.HandleServerHibernationEvent(e)
+		}
+		c := events.NewMatchCleanUpEvent(b, oldmatch)
+		for _, s := range p.sinks {
+			s.HandleMatchCleanUpEvent(c)
+		}
+		return
+	}
+	if e := events.NewMatchStatusEvent(b); e != nil {
+		for _, s := range p.sinks {
+			s.HandleMatchStatusEvent(e)
+		}
+		return
+	}
+	if e := events.NewAccoladeEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleAccoladeEvent(e)
+		}
+		return
+	}
+	if e := events.NewPlayerConnectedEvent(b); e != nil {
+		for _, s := range p.sinks {
+			s.HandlePlayerConnectedEvent(e)
 		}
 		return
 	}

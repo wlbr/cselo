@@ -6,12 +6,14 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/wlbr/commons/log"
 )
 
 type Emitter interface {
+	WaitForProcessors()
 	Loop()
 	AddProcessor(p Processor)
 	GetProcessor() []Processor
@@ -58,6 +60,7 @@ func shortenMessage(str string) (timestamp time.Time, message string, err error)
 //================================
 
 type fileEmitter struct {
+	wg            *sync.WaitGroup
 	config        *Config
 	procs         []Processor
 	recordingfile *os.File
@@ -67,8 +70,11 @@ type fileEmitter struct {
 
 func NewFileEmitter(cfg *Config) *fileEmitter {
 	e := &fileEmitter{config: cfg}
+	e.wg = new(sync.WaitGroup)
 	if cfg.Elo.RecorderFileName != "" {
-		f, err := os.Create(cfg.Elo.RecorderFileName)
+		//f, err := os.Create(cfg.Elo.RecorderFileName)
+		f, err := os.OpenFile(cfg.Elo.RecorderFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 		e.recordingfile = f
 		if err != nil {
 			log.Fatal("Could not create recorder file '%s': %s", cfg.Elo.RecorderFileName, err)
@@ -81,12 +87,18 @@ func NewFileEmitter(cfg *Config) *fileEmitter {
 	return e
 }
 
+func (em *fileEmitter) WaitForProcessors() {
+	em.wg.Wait()
+}
+
 func (em *fileEmitter) GetProcessor() []Processor {
 	return em.procs
 }
 
 func (em *fileEmitter) AddProcessor(p Processor) {
 	em.procs = append(em.procs, p)
+	p.AddWaitGroup(em.wg)
+	go p.Loop()
 }
 
 func (em *fileEmitter) AddFilter(f Filter) {
@@ -99,9 +111,9 @@ func (em *fileEmitter) GetFilters() []Filter {
 
 func (em *fileEmitter) Loop() {
 	log.Debug("Starting file emitter loop.")
-	f, err := os.Open(em.config.Elo.CsLogFileName)
+	f, err := os.Open(em.config.Elo.ImportFileName)
 	if err != nil {
-		log.Fatal("Error opening import CsLogFile '%s':  %s", em.config.Elo.CsLogFileName, err)
+		log.Fatal("Error opening import CsLogFile '%s':  %s", em.config.Elo.ImportFileName, err)
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -112,7 +124,7 @@ func (em *fileEmitter) Loop() {
 		buf := scanner.Text()
 		t, m, err := shortenMessage(buf)
 		if err != nil {
-			log.Warn("Ignoring line  %d. %v", lineno, err)
+			log.Info("Ignoring line  %d. %v", lineno, err)
 		} else {
 			if em.config.Elo.RecorderFileName != "" {
 				em.wbuf.WriteString(buf + "\n")
@@ -120,20 +132,28 @@ func (em *fileEmitter) Loop() {
 			}
 			if !filter(em, m) {
 				for _, p := range em.procs {
-					p.Dispatch(em, server, t, m)
+					p.AddJob(NewBaseEvent(server, t, m))
 				}
 			}
 		}
 	}
 
+	for _, p := range em.procs {
+		p.AddJob(NewBaseEvent(server, time.Now(), "cselo:StopProcessing."))
+	}
+
+	//wait for the processors to stop
+	em.WaitForProcessors()
+
 	if err := scanner.Err(); err != nil {
-		log.Fatal("Error scanning import CsLogFile '%s':  %s", em.config.Elo.CsLogFileName, err)
+		log.Fatal("Error scanning import CsLogFile '%s':  %s", em.config.Elo.ImportFileName, err)
 	}
 }
 
 //================================
 
 type udpEmitter struct {
+	wg            *sync.WaitGroup
 	config        *Config
 	recordingfile *os.File
 	procs         []Processor
@@ -143,6 +163,7 @@ type udpEmitter struct {
 
 func NewUdpEmitter(cfg *Config) *udpEmitter {
 	e := new(udpEmitter)
+	e.wg = new(sync.WaitGroup)
 	e.config = cfg
 	if cfg.Elo.RecorderFileName != "" {
 		f, err := os.Create(cfg.Elo.RecorderFileName)
@@ -158,8 +179,14 @@ func NewUdpEmitter(cfg *Config) *udpEmitter {
 	return e
 }
 
+func (em *udpEmitter) WaitForProcessors() {
+	em.wg.Wait()
+}
+
 func (em *udpEmitter) AddProcessor(p Processor) {
 	em.procs = append(em.procs, p)
+	p.AddWaitGroup(em.wg)
+	go p.Loop()
 }
 
 func (em *udpEmitter) GetProcessor() []Processor {
@@ -172,6 +199,15 @@ func (em *udpEmitter) AddFilter(f Filter) {
 
 func (em *udpEmitter) GetFilters() []Filter {
 	return em.filters
+}
+
+func (em *udpEmitter) stopWorkers(server *Server) {
+	for _, p := range em.procs {
+		p.AddJob(NewBaseEvent(server, time.Now(), "cselo:StopProcessing."))
+	}
+
+	//wait for the processors to stop
+	em.WaitForProcessors()
 }
 
 func (em *udpEmitter) Loop() {
@@ -197,6 +233,7 @@ func (em *udpEmitter) Loop() {
 	}
 	defer pc.Close()
 
+	defer em.stopWorkers(server)
 	//the event loop
 	for {
 		buf := make([]byte, 1024)
@@ -218,13 +255,14 @@ func (em *udpEmitter) Loop() {
 				}
 				if !filter(em, m) {
 					for _, p := range em.procs {
-						p.Dispatch(em, server, t, m)
+						p.AddJob(NewBaseEvent(server, t, m))
 					}
 				}
 			}
-			//go serve(em.config, pc, addr, buf[:n])
+
 		}
 	}
+
 }
 
 //================================

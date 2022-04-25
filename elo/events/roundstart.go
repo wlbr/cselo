@@ -10,16 +10,16 @@ import (
 )
 
 type RoundStart struct {
-	BaseEvent
+	*elo.BaseEvent
 }
 
 //World triggered "Round_Start"
 var roundstartdrex = regexp.MustCompile(`World triggered "Round_Start"`)
 
-func NewRoundStartEvent(server *elo.Server, t time.Time, message string) (e *RoundStart) {
-	if sm := roundstartdrex.FindStringSubmatch(message); sm != nil {
-		e = &RoundStart{BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
-		server.LastPlanter = nil
+func NewRoundStartEvent(b *elo.BaseEvent) (e *RoundStart) {
+	if sm := roundstartdrex.FindStringSubmatch(b.Message); sm != nil {
+		e = &RoundStart{BaseEvent: b}
+		b.Server.LastPlanter = nil
 		log.Info("Created event: %+v", e)
 	}
 	return e

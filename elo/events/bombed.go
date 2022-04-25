@@ -3,22 +3,21 @@ package events
 import (
 	"fmt"
 	"regexp"
-	"time"
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 )
 
 type Bombed struct {
-	BaseEvent
+	*elo.BaseEvent
 	Subject     *elo.Player
 	subjectTeam string
 }
 
-func NewBombedEvent(server *elo.Server, t time.Time, message string) (e *Bombed) {
-	if sm := bombeddrex.FindStringSubmatch(message); sm != nil {
-		e = &Bombed{Subject: server.LastPlanter, subjectTeam: sm[1],
-			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+func NewBombedEvent(b *elo.BaseEvent) (e *Bombed) {
+	if sm := bombeddrex.FindStringSubmatch(b.Message); sm != nil {
+		e = &Bombed{Subject: b.Server.LastPlanter, subjectTeam: sm[1],
+			BaseEvent: b}
 		log.Info("Created event: %+v", e)
 	}
 	return e

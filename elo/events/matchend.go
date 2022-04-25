@@ -12,7 +12,7 @@ import (
 )
 
 type MatchEnd struct {
-	BaseEvent
+	*elo.BaseEvent
 	GameMode    string
 	MapGroup    string
 	MapFullName string
@@ -22,10 +22,11 @@ type MatchEnd struct {
 	MatchStart  time.Time
 	MatchEnd    time.Time
 	Duration    time.Duration
+	Completed   bool
 }
 
-func NewMatchEndEvent(server *elo.Server, t time.Time, message string) (e *MatchEnd) {
-	if gom := gameoverdrex.FindStringSubmatch(message); gom != nil {
+func NewMatchEndEvent(b *elo.BaseEvent) (e *MatchEnd) {
+	if gom := gameoverdrex.FindStringSubmatch(b.Message); gom != nil {
 		mnpos := strings.LastIndex(gom[3], "/") + 1
 		mn := gom[3][mnpos:]
 
@@ -33,7 +34,7 @@ func NewMatchEndEvent(server *elo.Server, t time.Time, message string) (e *Match
 		dur := r.Replace(gom[6])
 		d, err := time.ParseDuration(dur)
 		if err != nil {
-			log.Error("Could not parse game duration. Message: '%s'", message)
+			log.Error("Could not parse game duration. Message: '%s'", b.Message)
 			d, _ = time.ParseDuration("0m")
 		}
 		scorea, err := strconv.Atoi(gom[4])
@@ -45,21 +46,23 @@ func NewMatchEndEvent(server *elo.Server, t time.Time, message string) (e *Match
 			log.Error("Cannot read score of team B (got %s). %v", gom[5], err)
 		}
 
-		server.CurrentMatch.GameMode = gom[1]
-		server.CurrentMatch.MapGroup = gom[2]
-		server.CurrentMatch.MapFullName = gom[3]
-		server.CurrentMatch.MapName = mn
-		server.CurrentMatch.ScoreA = scorea
-		server.CurrentMatch.ScoreB = scoreb
+		b.Server.CurrentMatch.GameMode = gom[1]
+		b.Server.CurrentMatch.MapGroup = gom[2]
+		b.Server.CurrentMatch.MapFullName = gom[3]
+		b.Server.CurrentMatch.MapName = mn
+		b.Server.CurrentMatch.ScoreA = scorea
+		b.Server.CurrentMatch.ScoreB = scoreb
+		b.Server.CurrentMatch.Completed = true
 
-		server.CurrentMatch.End = t
-		server.CurrentMatch.Duration = d
+		b.Server.CurrentMatch.End = b.Time
+		b.Server.CurrentMatch.Duration = d
 
-		e = &MatchEnd{GameMode: server.CurrentMatch.GameMode, MapGroup: server.CurrentMatch.MapGroup,
-			MapFullName: server.CurrentMatch.MapFullName, MapName: server.CurrentMatch.MapName,
-			ScoreA: server.CurrentMatch.ScoreA, ScoreB: server.CurrentMatch.ScoreB,
-			MatchEnd: server.CurrentMatch.End, Duration: server.CurrentMatch.Duration,
-			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+		e = &MatchEnd{GameMode: b.Server.CurrentMatch.GameMode, MapGroup: b.Server.CurrentMatch.MapGroup,
+			MapFullName: b.Server.CurrentMatch.MapFullName, MapName: b.Server.CurrentMatch.MapName,
+			ScoreA: b.Server.CurrentMatch.ScoreA, ScoreB: b.Server.CurrentMatch.ScoreB,
+			MatchEnd: b.Server.CurrentMatch.End, Duration: b.Server.CurrentMatch.Duration,
+			Completed: b.Server.CurrentMatch.Completed,
+			BaseEvent: b}
 		log.Info("Created event: %#v", e)
 	}
 	return e

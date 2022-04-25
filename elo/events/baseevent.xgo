@@ -1,9 +1,10 @@
-package elo
+package events
 
 import (
 	"time"
 
 	"github.com/wlbr/commons/log"
+	"github.com/wlbr/cselo/elo"
 )
 
 type Event interface {
@@ -11,12 +12,12 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	Server  *Server
+	Server  *elo.Server
 	Time    time.Time
 	Message string
 }
 
-func NewBaseEvent(server *Server, timestamp time.Time, message string) *BaseEvent {
+func NewBaseEvent(server *elo.Server, timestamp time.Time, message string) *BaseEvent {
 	e := &BaseEvent{Server: server, Time: timestamp, Message: message}
 	log.Info("Created event: %+v", e)
 	return e

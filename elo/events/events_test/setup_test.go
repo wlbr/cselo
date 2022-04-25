@@ -33,7 +33,7 @@ func testsetup() {
 	config = new(elo.Config)
 	config.Initialize("Test", time.Now().Format(time.ANSIC))
 
-	testfile = config.Elo.CsLogFileName
+	testfile = config.Elo.ImportFileName
 
 	processor := processors.NewCsgoLogProcessor(config)
 	if s, e := sinks.NewInMemoryCounterSink(config, player); e == nil {

@@ -3,14 +3,13 @@ package events
 import (
 	"fmt"
 	"regexp"
-	"time"
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 )
 
 type Planted struct {
-	BaseEvent
+	*elo.BaseEvent
 	Subject     *elo.Player
 	subjectTeam string
 }
@@ -18,12 +17,12 @@ type Planted struct {
 //"AHA<18><STEAM_1:1:689719><TERRORIST>" triggered "Planted_The_Bomb"
 var plantedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Planted_The_Bomb"`)
 
-func NewPlantedEvent(server *elo.Server, t time.Time, message string) (e *Planted) {
-	if sm := plantedrex.FindStringSubmatch(message); sm != nil {
+func NewPlantedEvent(b *elo.BaseEvent) (e *Planted) {
+	if sm := plantedrex.FindStringSubmatch(b.Message); sm != nil {
 		pl := elo.GetPlayer(sm[1], sm[3])
-		server.LastPlanter = pl
+		b.Server.LastPlanter = pl
 		e = &Planted{Subject: pl, subjectTeam: sm[4],
-			BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+			BaseEvent: b}
 		log.Info("Created event: %+v", e)
 	}
 	return e

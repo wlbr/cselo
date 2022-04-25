@@ -28,9 +28,11 @@ type Match struct {
 	MapName         string
 	ScoreA          int
 	ScoreB          int
+	Rounds          int
 	Start           time.Time
 	End             time.Time
 	Duration        time.Duration
+	Completed       bool
 	playersNameLock sync.RWMutex
 	playersByName   map[string]*Player
 	playersIdLock   sync.RWMutex

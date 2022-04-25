@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
@@ -15,7 +14,7 @@ import (
 var blindedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" blinded for (.+) by "(.+)<(.+)><(.+)><(.+)>" from flashbang entindex (\d+).*`)
 
 type Blinded struct {
-	BaseEvent
+	*elo.BaseEvent
 	Subject     *elo.Player
 	subjectTeam string
 	Object      *elo.Player
@@ -24,21 +23,20 @@ type Blinded struct {
 	Duration    float64
 }
 
-func NewBlindedEvent(server *elo.Server, t time.Time, message string) (e *Blinded) {
-	if sm := blindedrex.FindStringSubmatch(message); sm != nil {
+func NewBlindedEvent(b *elo.BaseEvent) (e *Blinded) {
+	if sm := blindedrex.FindStringSubmatch(b.Message); sm != nil {
 		dur, err1 := strconv.ParseFloat(sm[5], 32)
 		if err1 != nil {
-			log.Error("Flash duration not a float. %s, message: \"%s\"", err1, message)
+			log.Error("Flash duration not a float. %s, message: \"%s\"", err1, b.Message)
 		}
 		ent, err2 := strconv.Atoi(sm[10])
 		if err2 != nil {
-			log.Error("Entity number not a int. %s, message: \"%s\" %v", err2, message, ent)
+			log.Error("Entity number not a int. %s, message: \"%s\" %v", err2, b.Message, ent)
 		}
 		if err1 == nil && err2 == nil {
 			e = &Blinded{Subject: elo.GetPlayer(sm[6], sm[8]), subjectTeam: sm[9],
 				Object: elo.GetPlayer(sm[1], sm[3]), objectTeam: sm[4],
-				Duration: dur, flashentity: ent,
-				BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+				Duration: dur, flashentity: ent, BaseEvent: b}
 		}
 		log.Info("Created event: %+v", e)
 	}

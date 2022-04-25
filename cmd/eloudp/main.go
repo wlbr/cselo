@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/processors"
 	"github.com/wlbr/cselo/elo/sinks"
+	"github.com/wlbr/cselo/net"
 )
 
 var (
@@ -23,12 +24,19 @@ func main() {
 	config = new(elo.Config)
 	config.Initialize(Version, BuildTimestamp)
 	defer config.CleanUp()
+	log.Warn("Starting up")
 
 	processor := processors.NewCsgoLogProcessor(config)
 	// if s, e := sinks.NewInfluxSink(config); e == nil {
 	// 	processor.AddSink(s)
 	// }
-	if s, e := sinks.NewPostgresSink(config); e == nil {
+
+	discord := net.NewDisordSender(config.Elo.DiscordWebhook)
+	if config.Elo.ImportFileName != "" {
+		discord = net.NewDisordSender("") //inactive
+	}
+
+	if s, e := sinks.NewPostgresSink(config, discord); e == nil {
 		processor.AddSink(s)
 	}
 	// if s, e := sinks.NewPrinterSink(config); e == nil {
@@ -36,7 +44,7 @@ func main() {
 	// }
 
 	var emitter elo.Emitter
-	if config.Elo.CsLogFileName != "" {
+	if config.Elo.ImportFileName != "" {
 		emitter = elo.NewFileEmitter(config)
 	} else {
 		emitter = elo.NewUdpEmitter(config)
@@ -51,9 +59,8 @@ func main() {
 
 	end := time.Now()
 	elapsed := end.Sub(start)
-	fmt.Printf("Processing took %s\n", elapsed)
 
-	fmt.Printf("Processing took %s\n", elapsed)
+	defer log.Warn("Shutting down, been up for %s\n", elapsed)
 }
 
 type playerkill struct {

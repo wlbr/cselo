@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 )
 
 type Accolade struct {
-	BaseEvent
+	*elo.BaseEvent
 	Subject  *elo.Player
 	Type     string
 	Position int
@@ -29,26 +28,26 @@ type Accolade struct {
 //ACCOLADE, FINAL: {mvps},	Jacky<8>,	VALUE: 3.000000,	POS: 1,	SCORE: 24.000000
 var accoladerexrex = regexp.MustCompile(`ACCOLADE,\s+FINAL:\s+{(.+)},\s+(.+)<(.+)>,\s+VALUE:\s+(.+),\s+POS:\s+(.+),\s+SCORE:\s+(.+)`)
 
-func NewAccoladeEvent(server *elo.Server, t time.Time, message string) (a *Accolade) {
-	if sm := accoladerexrex.FindStringSubmatch(message); sm != nil {
+func NewAccoladeEvent(b *elo.BaseEvent) (a *Accolade) {
+	if sm := accoladerexrex.FindStringSubmatch(b.Message); sm != nil {
 		pos, err := strconv.Atoi(sm[5])
 		if err != nil {
-			log.Error("Could not read position in accolade. %v   message: %s", err, message)
+			log.Error("Could not read position in accolade. %v   message: %s", err, b.Message)
 		} else {
 			val, err := strconv.ParseFloat(sm[4], 64)
 			if err != nil {
-				log.Error("Could not read value in accolade. %v   message: %s", err, message)
+				log.Error("Could not read value in accolade. %v   message: %s", err, b.Message)
 			} else {
 				sco, err := strconv.ParseFloat(sm[6], 64)
 				if err != nil {
-					log.Error("Could not read score in accolade. %v   message: %s", err, message)
+					log.Error("Could not read score in accolade. %v   message: %s", err, b.Message)
 				} else {
 					p, err := elo.GetPlayerByName(sm[2])
 					if err != nil {
-						log.Info("Cannot identify player mentioned in accolade: %s   message: %s", sm[2], message)
+						log.Info("Cannot identify player mentioned in accolade: %s   message: %s", sm[2], b.Message)
 					} else {
 						a = &Accolade{Subject: p, Type: sm[1], Value: val, Position: pos, Score: sco,
-							BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+							BaseEvent: b}
 						log.Info("Created event: %+v", a)
 					}
 				}

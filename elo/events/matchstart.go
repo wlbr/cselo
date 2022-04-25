@@ -11,7 +11,7 @@ import (
 )
 
 type MatchStart struct {
-	BaseEvent
+	*elo.BaseEvent
 	MapFullName string
 	MapName     string
 }
@@ -20,13 +20,14 @@ type MatchStart struct {
 //World triggered "Match_Start" on "workshop/123518981/de_favela"
 var matchstartrex = regexp.MustCompile(`World triggered "Match_Start" on (.+)`)
 
-func NewMatchStartEvent(server *elo.Server, t time.Time, message string) (e *MatchStart) {
-	if sm := matchstartrex.FindStringSubmatch(message); sm != nil {
-		mnpos := strings.LastIndex(sm[1], "/") + 1
-		mn := sm[1][mnpos:]
-		m := &elo.Match{MapFullName: sm[1], MapName: mn, Start: t, Server: server}
-		server.CurrentMatch = m
-		e = &MatchStart{MapFullName: m.MapFullName, MapName: m.MapName, BaseEvent: BaseEvent{Time: t, Server: server, Message: message}}
+func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
+	if sm := matchstartrex.FindStringSubmatch(b.Message); sm != nil {
+		mfn := strings.ReplaceAll(sm[1], `"`, "")
+		mnpos := strings.LastIndex(mfn, "/") + 1
+		mn := mfn[mnpos:]
+		m := &elo.Match{MapFullName: mfn, MapName: mn, Start: b.Time, Server: b.Server}
+		b.Server.CurrentMatch = m
+		e = &MatchStart{MapFullName: m.MapFullName, MapName: m.MapName, BaseEvent: b}
 		log.Info("Created event: %+v", e)
 	}
 	return e
