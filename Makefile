@@ -11,11 +11,11 @@ clean:
 	rm -rf bin/ release/
 	rm -f main eloudp elogql csscores cselo.tgz cselo.zip cselo.dmg
 
-generate:
-	gqlgen
-
 dep:
 	go install github.com/99designs/gqlgen
+
+generate:
+	gqlgen
 
 build: dep generate
 	@echo Running build job...
@@ -32,7 +32,6 @@ test: recreatetables
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log
 	@echo Running test job...
 	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -import $(PROJECTROOT)data/test.log -loglevel Error -player Jagger
-
 
 coverage: test
 	@echo Running coverage job...
