@@ -14,16 +14,19 @@ clean:
 generate:
 	gqlgen
 
-build: generate
+dep:
+	go install github.com/99designs/gqlgen
+
+build: dep generate
 	@echo Running build job...
 	mkdir -p bin/linux bin/windows bin/mac
 	GOOS=linux go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
 	GOOS=windows go build  -ldflags "$(LINKERFLAGS)" -o bin/windows ./...
 	GOOS=darwin go build  -ldflags "$(LINKERFLAGS)" -o bin/mac ./...
 
-run:
+run: generate
 #	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/latest.log
-	gqlgen && go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
+	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
 
 test: recreatetables
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log

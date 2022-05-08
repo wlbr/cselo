@@ -2,29 +2,6 @@
 
 package model
 
-import (
-	"time"
-)
-
-type Match struct {
-	ID          string    `json:"id"`
-	Server      string    `json:"server"`
-	Gamemode    string    `json:"gamemode"`
-	Mapgroup    string    `json:"mapgroup"`
-	Mapfullname string    `json:"mapfullname"`
-	Mapname     string    `json:"mapname"`
-	Scorea      int       `json:"scorea"`
-	Scoreb      int       `json:"scoreb"`
-	Rounds      int       `json:"rounds"`
-	Start       time.Time `json:"start"`
-	End         time.Time `json:"end"`
-	Duration    time.Time `json:"duration"`
-	Completed   bool      `json:"completed"`
-}
-
-type Player struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Steamid   string `json:"steamid"`
-	Profileid string `json:"profileid"`
+type Dummy struct {
+	ID string `json:"id"`
 }

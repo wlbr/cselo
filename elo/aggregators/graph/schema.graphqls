@@ -47,6 +47,9 @@ type Match  {
 	# playersbyid:     map[String]*player
 }
 
+type Dummy {
+  id:        ID!
+}
 
 
 

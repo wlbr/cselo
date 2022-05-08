@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/aggregators/graph/model"
 )
 
@@ -36,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Match() MatchResolver
 	Query() QueryResolver
 }
 
@@ -43,18 +45,22 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Dummy struct {
+		ID func(childComplexity int) int
+	}
+
 	Match struct {
 		Completed   func(childComplexity int) int
 		Duration    func(childComplexity int) int
 		End         func(childComplexity int) int
-		Gamemode    func(childComplexity int) int
+		GameMode    func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Mapfullname func(childComplexity int) int
-		Mapgroup    func(childComplexity int) int
-		Mapname     func(childComplexity int) int
+		MapFullName func(childComplexity int) int
+		MapGroup    func(childComplexity int) int
+		MapName     func(childComplexity int) int
 		Rounds      func(childComplexity int) int
-		Scorea      func(childComplexity int) int
-		Scoreb      func(childComplexity int) int
+		ScoreA      func(childComplexity int) int
+		ScoreB      func(childComplexity int) int
 		Server      func(childComplexity int) int
 		Start       func(childComplexity int) int
 	}
@@ -62,8 +68,8 @@ type ComplexityRoot struct {
 	Player struct {
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
-		Profileid func(childComplexity int) int
-		Steamid   func(childComplexity int) int
+		ProfileID func(childComplexity int) int
+		SteamID   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -73,10 +79,15 @@ type ComplexityRoot struct {
 	}
 }
 
+type MatchResolver interface {
+	Server(ctx context.Context, obj *elo.Match) (string, error)
+
+	Duration(ctx context.Context, obj *elo.Match) (*time.Time, error)
+}
 type QueryResolver interface {
-	Players(ctx context.Context) ([]*model.Player, error)
-	Player(ctx context.Context, id string) (*model.Player, error)
-	Matches(ctx context.Context) ([]*model.Match, error)
+	Players(ctx context.Context) ([]*elo.Player, error)
+	Player(ctx context.Context, id string) (*elo.Player, error)
+	Matches(ctx context.Context) ([]*elo.Match, error)
 }
 
 type executableSchema struct {
@@ -93,6 +104,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Dummy.id":
+		if e.complexity.Dummy.ID == nil {
+			break
+		}
+
+		return e.complexity.Dummy.ID(childComplexity), true
 
 	case "Match.completed":
 		if e.complexity.Match.Completed == nil {
@@ -116,11 +134,11 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.Match.End(childComplexity), true
 
 	case "Match.gamemode":
-		if e.complexity.Match.Gamemode == nil {
+		if e.complexity.Match.GameMode == nil {
 			break
 		}
 
-		return e.complexity.Match.Gamemode(childComplexity), true
+		return e.complexity.Match.GameMode(childComplexity), true
 
 	case "Match.id":
 		if e.complexity.Match.ID == nil {
@@ -130,25 +148,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.Match.ID(childComplexity), true
 
 	case "Match.mapfullname":
-		if e.complexity.Match.Mapfullname == nil {
+		if e.complexity.Match.MapFullName == nil {
 			break
 		}
 
-		return e.complexity.Match.Mapfullname(childComplexity), true
+		return e.complexity.Match.MapFullName(childComplexity), true
 
 	case "Match.mapgroup":
-		if e.complexity.Match.Mapgroup == nil {
+		if e.complexity.Match.MapGroup == nil {
 			break
 		}
 
-		return e.complexity.Match.Mapgroup(childComplexity), true
+		return e.complexity.Match.MapGroup(childComplexity), true
 
 	case "Match.mapname":
-		if e.complexity.Match.Mapname == nil {
+		if e.complexity.Match.MapName == nil {
 			break
 		}
 
-		return e.complexity.Match.Mapname(childComplexity), true
+		return e.complexity.Match.MapName(childComplexity), true
 
 	case "Match.rounds":
 		if e.complexity.Match.Rounds == nil {
@@ -158,18 +176,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.Match.Rounds(childComplexity), true
 
 	case "Match.scorea":
-		if e.complexity.Match.Scorea == nil {
+		if e.complexity.Match.ScoreA == nil {
 			break
 		}
 
-		return e.complexity.Match.Scorea(childComplexity), true
+		return e.complexity.Match.ScoreA(childComplexity), true
 
 	case "Match.scoreb":
-		if e.complexity.Match.Scoreb == nil {
+		if e.complexity.Match.ScoreB == nil {
 			break
 		}
 
-		return e.complexity.Match.Scoreb(childComplexity), true
+		return e.complexity.Match.ScoreB(childComplexity), true
 
 	case "Match.server":
 		if e.complexity.Match.Server == nil {
@@ -200,18 +218,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		return e.complexity.Player.Name(childComplexity), true
 
 	case "Player.profileid":
-		if e.complexity.Player.Profileid == nil {
+		if e.complexity.Player.ProfileID == nil {
 			break
 		}
 
-		return e.complexity.Player.Profileid(childComplexity), true
+		return e.complexity.Player.ProfileID(childComplexity), true
 
 	case "Player.steamid":
-		if e.complexity.Player.Steamid == nil {
+		if e.complexity.Player.SteamID == nil {
 			break
 		}
 
-		return e.complexity.Player.Steamid(childComplexity), true
+		return e.complexity.Player.SteamID(childComplexity), true
 
 	case "Query.matches":
 		if e.complexity.Query.Matches == nil {
@@ -338,6 +356,9 @@ type Match  {
 	# playersbyid:     map[String]*player
 }
 
+type Dummy {
+  id:        ID!
+}
 
 
 
@@ -424,7 +445,42 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Match_id(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Dummy_id(ctx context.Context, field graphql.CollectedField, obj *model.Dummy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Dummy",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Match_id(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -454,12 +510,12 @@ func (ec *executionContext) _Match_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_server(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_server(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -470,14 +526,14 @@ func (ec *executionContext) _Match_server(ctx context.Context, field graphql.Col
 		Object:     "Match",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Server, nil
+		return ec.resolvers.Match().Server(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -494,7 +550,7 @@ func (ec *executionContext) _Match_server(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_gamemode(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_gamemode(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -512,7 +568,7 @@ func (ec *executionContext) _Match_gamemode(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Gamemode, nil
+		return obj.GameMode, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -529,7 +585,7 @@ func (ec *executionContext) _Match_gamemode(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_mapgroup(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_mapgroup(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -547,7 +603,7 @@ func (ec *executionContext) _Match_mapgroup(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Mapgroup, nil
+		return obj.MapGroup, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -564,7 +620,7 @@ func (ec *executionContext) _Match_mapgroup(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_mapfullname(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_mapfullname(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -582,7 +638,7 @@ func (ec *executionContext) _Match_mapfullname(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Mapfullname, nil
+		return obj.MapFullName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -599,7 +655,7 @@ func (ec *executionContext) _Match_mapfullname(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_mapname(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_mapname(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -617,7 +673,7 @@ func (ec *executionContext) _Match_mapname(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Mapname, nil
+		return obj.MapName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -634,7 +690,7 @@ func (ec *executionContext) _Match_mapname(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_scorea(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_scorea(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -652,7 +708,7 @@ func (ec *executionContext) _Match_scorea(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Scorea, nil
+		return obj.ScoreA, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -669,7 +725,7 @@ func (ec *executionContext) _Match_scorea(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_scoreb(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_scoreb(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -687,7 +743,7 @@ func (ec *executionContext) _Match_scoreb(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Scoreb, nil
+		return obj.ScoreB, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -704,7 +760,7 @@ func (ec *executionContext) _Match_scoreb(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_rounds(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_rounds(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -739,7 +795,7 @@ func (ec *executionContext) _Match_rounds(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_start(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_start(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -774,7 +830,7 @@ func (ec *executionContext) _Match_start(ctx context.Context, field graphql.Coll
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_end(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_end(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -809,7 +865,7 @@ func (ec *executionContext) _Match_end(ctx context.Context, field graphql.Collec
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_duration(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_duration(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -820,14 +876,14 @@ func (ec *executionContext) _Match_duration(ctx context.Context, field graphql.C
 		Object:     "Match",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Duration, nil
+		return ec.resolvers.Match().Duration(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -839,12 +895,12 @@ func (ec *executionContext) _Match_duration(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Match_completed(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+func (ec *executionContext) _Match_completed(ctx context.Context, field graphql.CollectedField, obj *elo.Match) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -879,7 +935,7 @@ func (ec *executionContext) _Match_completed(ctx context.Context, field graphql.
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Player_id(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+func (ec *executionContext) _Player_id(ctx context.Context, field graphql.CollectedField, obj *elo.Player) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -909,12 +965,12 @@ func (ec *executionContext) _Player_id(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Player_name(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+func (ec *executionContext) _Player_name(ctx context.Context, field graphql.CollectedField, obj *elo.Player) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -949,7 +1005,7 @@ func (ec *executionContext) _Player_name(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Player_steamid(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+func (ec *executionContext) _Player_steamid(ctx context.Context, field graphql.CollectedField, obj *elo.Player) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -967,7 +1023,7 @@ func (ec *executionContext) _Player_steamid(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Steamid, nil
+		return obj.SteamID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -984,7 +1040,7 @@ func (ec *executionContext) _Player_steamid(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Player_profileid(ctx context.Context, field graphql.CollectedField, obj *model.Player) (ret graphql.Marshaler) {
+func (ec *executionContext) _Player_profileid(ctx context.Context, field graphql.CollectedField, obj *elo.Player) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1002,7 +1058,7 @@ func (ec *executionContext) _Player_profileid(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Profileid, nil
+		return obj.ProfileID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1049,9 +1105,9 @@ func (ec *executionContext) _Query_players(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Player)
+	res := resTmp.([]*elo.Player)
 	fc.Result = res
-	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayerᚄ(ctx, field.Selections, res)
+	return ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayerᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_player(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1091,9 +1147,9 @@ func (ec *executionContext) _Query_player(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Player)
+	res := resTmp.(*elo.Player)
 	fc.Result = res
-	return ec.marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayer(ctx, field.Selections, res)
+	return ec.marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_matches(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1126,9 +1182,9 @@ func (ec *executionContext) _Query_matches(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Match)
+	res := resTmp.([]*elo.Match)
 	fc.Result = res
-	return ec.marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐMatchᚄ(ctx, field.Selections, res)
+	return ec.marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐMatchᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2396,139 +2452,19 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 // region    **************************** object.gotpl ****************************
 
-var matchImplementors = []string{"Match"}
+var dummyImplementors = []string{"Dummy"}
 
-func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, obj *model.Match) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, matchImplementors)
+func (ec *executionContext) _Dummy(ctx context.Context, sel ast.SelectionSet, obj *model.Dummy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dummyImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Match")
+			out.Values[i] = graphql.MarshalString("Dummy")
 		case "id":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_id(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "server":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_server(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "gamemode":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_gamemode(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "mapgroup":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_mapgroup(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "mapfullname":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_mapfullname(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "mapname":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_mapname(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "scorea":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_scorea(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "scoreb":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_scoreb(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "rounds":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_rounds(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "start":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_start(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "end":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_end(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "duration":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_duration(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "completed":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Match_completed(ctx, field, obj)
+				return ec._Dummy_id(ctx, field, obj)
 			}
 
 			out.Values[i] = innerFunc(ctx)
@@ -2547,9 +2483,180 @@ func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var matchImplementors = []string{"Match"}
+
+func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, obj *elo.Match) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, matchImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Match")
+		case "id":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_id(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "server":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Match_server(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "gamemode":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_gamemode(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "mapgroup":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_mapgroup(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "mapfullname":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_mapfullname(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "mapname":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_mapname(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "scorea":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_scorea(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "scoreb":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_scoreb(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "rounds":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_rounds(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "start":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_start(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "end":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_end(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "duration":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Match_duration(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "completed":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Match_completed(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var playerImplementors = []string{"Player"}
 
-func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, obj *model.Player) graphql.Marshaler {
+func (ec *executionContext) _Player(ctx context.Context, sel ast.SelectionSet, obj *elo.Player) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, playerImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -3159,6 +3266,21 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2int64(ctx context.Context, v interface{}) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3189,7 +3311,7 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐMatchᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Match) graphql.Marshaler {
+func (ec *executionContext) marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐMatchᚄ(ctx context.Context, sel ast.SelectionSet, v []*elo.Match) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3213,7 +3335,7 @@ func (ec *executionContext) marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋel
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMatch2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐMatch(ctx, sel, v[i])
+			ret[i] = ec.marshalNMatch2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐMatch(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3233,7 +3355,7 @@ func (ec *executionContext) marshalNMatch2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋel
 	return ret
 }
 
-func (ec *executionContext) marshalNMatch2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐMatch(ctx context.Context, sel ast.SelectionSet, v *model.Match) graphql.Marshaler {
+func (ec *executionContext) marshalNMatch2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐMatch(ctx context.Context, sel ast.SelectionSet, v *elo.Match) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3243,11 +3365,11 @@ func (ec *executionContext) marshalNMatch2ᚖgithubᚗcomᚋwlbrᚋcseloᚋelo�
 	return ec._Match(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlayer2githubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayer(ctx context.Context, sel ast.SelectionSet, v model.Player) graphql.Marshaler {
+func (ec *executionContext) marshalNPlayer2githubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayer(ctx context.Context, sel ast.SelectionSet, v elo.Player) graphql.Marshaler {
 	return ec._Player(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Player) graphql.Marshaler {
+func (ec *executionContext) marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayerᚄ(ctx context.Context, sel ast.SelectionSet, v []*elo.Player) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3271,7 +3393,7 @@ func (ec *executionContext) marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋe
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayer(ctx, sel, v[i])
+			ret[i] = ec.marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayer(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3291,7 +3413,7 @@ func (ec *executionContext) marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋe
 	return ret
 }
 
-func (ec *executionContext) marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚋaggregatorsᚋgraphᚋmodelᚐPlayer(ctx context.Context, sel ast.SelectionSet, v *model.Player) graphql.Marshaler {
+func (ec *executionContext) marshalNPlayer2ᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayer(ctx context.Context, sel ast.SelectionSet, v *elo.Player) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3323,6 +3445,27 @@ func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
