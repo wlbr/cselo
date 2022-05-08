@@ -1,0 +1,59 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+# gqlgen supports some custom scalars out of the box
+# see: https://github.com/99designs/gqlgen/blob/master/docs/content/reference/scalars.md
+
+# resolves to time.Time
+scalar Time
+
+# resolves to map[string]interface{}
+scalar Map
+
+# resolves to interface{}
+scalar Any
+
+# resolves to the following struct
+# type Upload struct {
+# 	File     io.Reader
+# 	Filename string
+# 	Size     int64
+# }
+scalar Upload
+
+type Player {
+  id:        ID!
+  name:      String!
+  steamid:   String!
+  profileid: String!
+}
+
+type Match  {
+	id:              ID!
+	server:          String!
+	gamemode:        String!
+	mapgroup:        String!
+	mapfullname:     String!
+	mapname:         String!
+	scorea:          Int!
+	scoreb:          Int!
+	rounds:          Int!
+	start:           Time!
+	end:             Time!
+	duration:        Time!
+	completed:       Boolean!
+	# playersbyname:   map[String]*player
+	# playersbyid:     map[String]*player
+}
+
+
+
+
+type Query {
+  players: [Player!]!
+  player(id: ID!): Player!
+  matches: [Match!]!
+}
+
+

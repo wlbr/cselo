@@ -1,4 +1,6 @@
 ; CSELO Config file
+[Elo]
+  DiscordWebhook = yourDirscordChannels-WebHookUrl
 [PostgreSQL]
   Host = yourhost    ; localhost, ip or hostname
   Port = yourport    ; default is 5432

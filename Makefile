@@ -9,10 +9,12 @@ clean:
 	@echo Running clean job...
 	rm -f coverage.txt
 	rm -rf bin/ release/
-	rm -f main eloudp csscores cselo.tgz cselo.zip cselo.dmg
+	rm -f main eloudp elogql csscores cselo.tgz cselo.zip cselo.dmg
 
+generate:
+	gqlgen
 
-build: #generate
+build: generate
 	@echo Running build job...
 	mkdir -p bin/linux bin/windows bin/mac
 	GOOS=linux go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
@@ -20,25 +22,22 @@ build: #generate
 	GOOS=darwin go build  -ldflags "$(LINKERFLAGS)" -o bin/mac ./...
 
 run:
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/latest.log
+#	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/latest.log
+	gqlgen && go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
 
 test: recreatetables
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -cslog data/test.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log
 	@echo Running test job...
-	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -cslog $(PROJECTROOT)data/test.log -loglevel Error -player Jagger
+	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -import $(PROJECTROOT)data/test.log -loglevel Error -player Jagger
 
-analysis:
-	psql cselo -f scripts/analysis.sql
 
 coverage: test
 	@echo Running coverage job...
 	go tool cover -html=coverage.txt
 
 deploy:
-	mkdir -p release
-	$(eval VER=$(shell sh -c "bin/mac/eloudp -version |cut -f 2 -d ' '"))
-	cd bin && tar -zcpv -s /linux/cselo-linux-$(VER)/ -f ../release/cselo-linux-$(VER).tgz linux/*
-	cd bin/windows &&  zip -r -9 ../../release/cselo-win-$(VER).zip *
+	ssh cselo mkdir -p '~/cselo/bin'
+	rsync -v --progress bin/linux/* cselo:~/cselo/bin
 
 initelodb: resetdb recreatetables
 
@@ -62,3 +61,5 @@ resetdb: stopdb startdb
 recreatetables:
 	psql cselo -U cseloapp -f scripts/create-tables.sql
 
+analysis:
+	psql cselo -f scripts/analysis.sql
