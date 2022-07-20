@@ -4,7 +4,7 @@ DBPATH	=	$(PROJECTROOT)db/
 
 all: clean build
 
-.PHONY: clean
+.PHONY: clean release
 clean:
 	@echo Running clean job...
 	rm -f coverage.txt
@@ -44,7 +44,8 @@ deploy:
 
 release:
 	mkdir -p release
-	$(eval VER=$(shell sh -c "bin/mac/eloudp -version |cut -f 2 -d ' '"))
+	rm -rf release/
+	$(eval VER=$(shell sh -c "bin/mac/x64/eloudp -version |cut -f 2 -d ' '"))
 	cd bin && tar -zcpv -s /linux/cselo-linux-$(VER)/ -f ../release/cselo-linux-$(VER).tgz linux/*   # OSX
 	cd bin/windows &&  zip -r -9 ../../release/cselo-win-$(VER).tgz *
 
