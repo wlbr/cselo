@@ -37,8 +37,8 @@ jobs:
           security unlock-keychain -p build.keychain.pw build.keychain
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k build.keychain.pw build.keychain
-          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/x64/*
-          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/arm/*
+          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/mac/x64/*
+          /usr/bin/codesign --force -s $MACOS_DEVELOPER_ID --options runtime ./bin/mac/arm/*
       - name: Notarize OSX executable
         if: startsWith(github.ref, 'refs/tags/')
         env:
