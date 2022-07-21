@@ -323,6 +323,11 @@ scalar Map
 # resolves to interface{}
 scalar Any
 
+# needed if all models are autobinded and none is generated
+type Dummy {
+  id:        ID!
+}
+
 # resolves to the following struct
 # type Upload struct {
 # 	File     io.Reader
@@ -356,9 +361,6 @@ type Match  {
 	# playersbyid:     map[String]*player
 }
 
-type Dummy {
-  id:        ID!
-}
 
 
 
