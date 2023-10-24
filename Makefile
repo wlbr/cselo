@@ -19,15 +19,17 @@ generate:
 
 build: dep generate
 	@echo Running build job...
-	mkdir -p bin/linux bin/windows bin/mac/x64 bin/mac/arm
-	GOOS=linux GOARCH=amd64 go build  -ldflags "$(LINKERFLAGS)" -o bin/linux ./...
+	mkdir -p bin/linux/arm bin/linux/x64 bin/windows bin/mac/x64 bin/mac/arm
+	GOOS=linux GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/linux/arm ./...
+	GOOS=linux GOARCH=amd64 go build  -ldflags "$(LINKERFLAGS)" -o bin/linux/x64 ./...
 	GOOS=windows GOARCH=amd64 go build  -ldflags "$(LINKERFLAGS)" -o bin/windows ./...
 	GOOS=darwin GOARCH=amd64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/x64 ./...
 	GOOS=darwin GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/arm ./...
 
 run: generate
 #	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/latest.log
-	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
+#	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
+	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 
 test: recreatetables
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log
@@ -39,8 +41,8 @@ coverage: test
 	go tool cover -html=coverage.txt
 
 deploy:
-	ssh cselo mkdir -p '~/cselo/bin'
-	rsync -v --progress bin/linux/* cselo:~/cselo/bin
+	ssh eloarm	 mkdir -p '~/bin'
+	rsync -v --progress bin/linux/* eloarm:~/bin
 
 release:
 	mkdir -p release

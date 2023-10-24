@@ -23,7 +23,7 @@ func NewPostgresSink(cfg *elo.Config, discord *net.DiscordSender) (*PostgresSink
 	var err error
 	s := &PostgresSink{config: cfg, discord: discord}
 
-	//pg connectstring "postgres://user:password@host:port5432/dbname"
+	//pg connectstring "postgres://user:password@host:port/dbname"
 	dbinfo := "postgres://"
 	if cfg.PostgreSQL.User != "" {
 		dbinfo += cfg.PostgreSQL.User

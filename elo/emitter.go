@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -263,6 +264,120 @@ func (em *udpEmitter) Loop() {
 		}
 	}
 
+}
+
+//================================
+
+type httpEmitter struct {
+	wg            *sync.WaitGroup
+	config        *Config
+	recordingfile *os.File
+	procs         []Processor
+	wbuf          *bufio.Writer
+	filters       []Filter
+}
+
+func NewHttpEmitter(cfg *Config) *httpEmitter {
+	e := new(httpEmitter)
+	e.wg = new(sync.WaitGroup)
+	e.config = cfg
+	if cfg.Elo.RecorderFileName != "" {
+		f, err := os.Create(cfg.Elo.RecorderFileName)
+		e.recordingfile = f
+		if err != nil {
+			log.Fatal("Could not create recorder file '%s': %s", cfg.Elo.RecorderFileName, err)
+			cfg.FatalExit()
+		} else {
+			cfg.AddCleanUpFn(e.recordingfile.Close)
+			e.wbuf = bufio.NewWriter(e.recordingfile)
+		}
+	}
+	return e
+}
+
+func (em *httpEmitter) WaitForProcessors() {
+	em.wg.Wait()
+}
+
+func (em *httpEmitter) AddProcessor(p Processor) {
+	em.procs = append(em.procs, p)
+	p.AddWaitGroup(em.wg)
+	go p.Loop()
+}
+
+func (em *httpEmitter) GetProcessor() []Processor {
+	return em.procs
+}
+
+func (em *httpEmitter) AddFilter(f Filter) {
+	em.filters = append(em.filters, f)
+}
+
+func (em *httpEmitter) GetFilters() []Filter {
+	return em.filters
+}
+
+func (em *httpEmitter) stopWorkers(server *Server) {
+	for _, p := range em.procs {
+		p.AddJob(NewBaseEvent(server, time.Now(), "cselo:StopProcessing."))
+	}
+
+	//wait for the processors to stop
+	em.WaitForProcessors()
+}
+
+func (em *httpEmitter) Loop() {
+	const protocol = "http"
+	port := "42820" //em.config.Elo.Port
+	server := &Server{IP: "fromHttp"}
+	defer em.stopWorkers(server)
+	handler := &csLogHandler{emitter: em, server: server}
+
+	s := &http.Server{
+		Addr:           ":" + port,
+		Handler:        handler,
+		ReadTimeout:    1 * time.Second,
+		WriteTimeout:   1 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	log.Info("Starting to listen on port %s", port)
+	err := s.ListenAndServe()
+
+	if err != nil {
+		log.Error("Error opening http server: %s", err)
+	}
+}
+
+type csLogHandler struct {
+	emitter *httpEmitter
+	server  *Server
+}
+
+func (h csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	buf := make([]byte, 1024)
+	n, err := r.Body.Read(buf)
+	if err != nil {
+		log.Error("Problem reqading request body: %v", err)
+	} else {
+		log.Info("Post: %v", string(buf))
+
+		sbuf := string(buf[5 : n-1])
+		t, m, err := shortenMessage(sbuf)
+		if err != nil {
+			log.Warn("Ignoring line. %v", err)
+			return
+		} else {
+			if h.emitter.config.Elo.RecorderFileName != "" {
+				h.emitter.wbuf.WriteString(sbuf)
+				h.emitter.wbuf.Flush()
+			}
+			if !filter(h.emitter, m) {
+				for _, p := range h.emitter.procs {
+					p.AddJob(NewBaseEvent(h.server, t, m))
+				}
+			}
+		}
+	}
 }
 
 //================================

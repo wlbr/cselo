@@ -54,3 +54,4 @@ coverage.txt
 cselo.ini
 *.ini
 disco
+initialize-new-instance.sh
