@@ -68,13 +68,16 @@ func NewMatchEndEvent(b *elo.BaseEvent) (e *MatchEnd) {
 	return e
 }
 
-//Game Over: casual 2187570436 workshop/2209334999/de_elysion score 2:8 after 9 min
-//Game Over: casual 2187570436 de_crete score 2:8 after 8 min
-//Game Over: competitive default de_rats_brb score 8:3 after 16 min
-//Game Over: competitive default de_shortnuke score 1:8 after 5 min
-//Game Over: casual 2187570436 workshop/125444404/cs_office score 8:0 after 9 min
-//Game Over: casual 2187570436 de_grind score 8:7 after 20 min
-//Game Over: casual 2187570436 de_mocha score 5:8 after 16 min
+// CS2
+// Game Over: casual mg_active cs_office score 8:4 after 14 min
+// CSGO
+// Game Over: casual 2187570436 workshop/2209334999/de_elysion score 2:8 after 9 min
+// Game Over: casual 2187570436 de_crete score 2:8 after 8 min
+// Game Over: competitive default de_rats_brb score 8:3 after 16 min
+// Game Over: competitive default de_shortnuke score 1:8 after 5 min
+// Game Over: casual 2187570436 workshop/125444404/cs_office score 8:0 after 9 min
+// Game Over: casual 2187570436 de_grind score 8:7 after 20 min
+// Game Over: casual 2187570436 de_mocha score 5:8 after 16 min
 var gameoverdrex = regexp.MustCompile(`Game Over: (.+) (.+) (.+) score (.+):(.+) after (.+)`)
 
 func (e *MatchEnd) String() string {

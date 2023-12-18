@@ -13,7 +13,7 @@ var matchends int = -1
 
 func countMatchEnds() int {
 	if matchends == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i "Game Over:" %s |wc -l`, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "Game Over:" %s |wc -l`, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {

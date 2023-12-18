@@ -3,9 +3,11 @@ package elo
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -33,29 +35,61 @@ func filter(em Emitter, m string) bool {
 
 //================================
 
+// CS2 http:
+// 11/04/2023 - 15:41:55.798 - "Jagger<0><[U:1:1363214]><>" connected, address "172.17.0.1:45612"
+// CS2 logfile:
+// L 10/26/2023 - 11:59:04: "Jagger<0><[U:1:1363214]><>" connected, address "172.17.0.1:50390"
+// CSGO:
+// L 08/26/2021 - 18:00:55: "Dackel<21><STEAM_1:0:1770206><>" connected, address ""
+// L 04/14/2022 - 18:27:16: "DorianHunter<39><STEAM_1:1:192746><>" connected, address ""
+
+// func shortenMessage(str string) (timestamp time.Time, message string, err error) {
+// 	strings.TrimLeft(str, " L")
+// 	start := 0
+// 	dend := start + 25
+// 	if len(str) < dend || str[dend] != ' ' {
+// 		return timestamp, message, fmt.Errorf("Logline not in standard format, did not find end of date. Logline: '%s'", str)
+// 	}
+// 	if err == nil {
+// 		layout := "01/02/2006 - 15:04:05.000"
+// 		timestamp, err = time.Parse(layout, str[start:dend])
+// 		if err != nil {
+// 			log.Error("Could not parse event time, using <now>: %s", str[start:dend])
+// 			timestamp = time.Now()
+// 			err = nil
+// 		}
+// 		message = str[dend+3:]
+// 	}
+
+// 	return timestamp, message, err
+// }
+
+// var shortenrex = regexp.MustCompile(`(?Um)L |(.+) - (.+)(:| -) (.*)$`)
+// var shortenrex = regexp.MustCompile(`(L )?(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)$`)
+var shortenrex = regexp.MustCompile(`(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)$`)
+
 func shortenMessage(str string) (timestamp time.Time, message string, err error) {
-	//str := string(buf)
-	start := strings.IndexByte(str, ' ')
-	if start == -1 {
-		return timestamp, message, fmt.Errorf("Logline not in standard format. Logline: '%s'", str)
-	}
-	start++ //skip the initial space
-	dend := start + 21
-	if len(str) < dend || str[dend] != ':' {
-		return timestamp, message, fmt.Errorf("Logline not in standard format, did not find end of date. Logline: '%s'", str)
-	}
-	if err == nil {
+
+	str = strings.TrimRight(str, "\n")
+	str = strings.TrimLeft(str, "L ")
+
+	if sm := shortenrex.FindStringSubmatch(str); sm != nil {
 		layout := "01/02/2006 - 15:04:05"
-		timestamp, err = time.Parse(layout, str[start:dend])
+		if len(sm[2]) > 8 {
+			layout += ".000"
+		}
+		timestamp, err = time.Parse(layout, sm[1]+" - "+sm[2])
 		if err != nil {
-			log.Error("Could not parse event time, using <now>: %s", str[start:dend])
+			log.Error("Could not parse event time, using <now>: %s", sm[1]+" - "+sm[2])
 			timestamp = time.Now()
 			err = nil
 		}
-		message = str[dend+2:]
+		message = sm[5]
 
+		return timestamp, message, err
+	} else {
+		return timestamp, message, fmt.Errorf("Logline not in standard format. Logline: '%s'", str)
 	}
-	return timestamp, message, err
 }
 
 //================================
@@ -354,26 +388,31 @@ type csLogHandler struct {
 }
 
 func (h csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	buf := make([]byte, 1024)
-	n, err := r.Body.Read(buf)
-	if err != nil {
-		log.Error("Problem reqading request body: %v", err)
-	} else {
-		log.Info("Post: %v", string(buf))
+	var buf []byte
+	var err error
 
-		sbuf := string(buf[5 : n-1])
-		t, m, err := shortenMessage(sbuf)
+	if r.Body == nil {
+		log.Info("Empty request body. Url: %s", r.URL)
+	} else {
+		buf, err = io.ReadAll(r.Body)
+		//fmt.Println(string(buf))
 		if err != nil {
-			log.Warn("Ignoring line. %v", err)
-			return
+			log.Error("Problem reading request body: %v", err)
 		} else {
-			if h.emitter.config.Elo.RecorderFileName != "" {
-				h.emitter.wbuf.WriteString(sbuf)
-				h.emitter.wbuf.Flush()
-			}
-			if !filter(h.emitter, m) {
-				for _, p := range h.emitter.procs {
-					p.AddJob(NewBaseEvent(h.server, t, m))
+			sbuf := string(buf)
+			t, m, err := shortenMessage(sbuf)
+			if err != nil {
+				log.Warn("Ignoring line. %v", err)
+				return
+			} else {
+				if h.emitter.config.Elo.RecorderFileName != "" {
+					h.emitter.wbuf.WriteString(sbuf)
+					h.emitter.wbuf.Flush()
+				}
+				if !filter(h.emitter, m) {
+					for _, p := range h.emitter.procs {
+						p.AddJob(NewBaseEvent(h.server, t, m))
+					}
 				}
 			}
 		}

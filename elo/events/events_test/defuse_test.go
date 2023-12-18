@@ -13,7 +13,7 @@ var playersdefuses int = -1
 
 func countDefusePerPlayer(p string) int {
 	if playersdefuses == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+ triggered \"Defused_The_Bomb\"" %s |wc -l`, p, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<(\[U:|STEAM).+ triggered \"Defused_The_Bomb\"" %s |wc -l`, p, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {
@@ -43,7 +43,7 @@ var alldefuses int = -1
 
 func countAllDefuses() int {
 	if alldefuses == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+ triggered \"Defused_The_Bomb\"" %s |wc -l`, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<(\[U:|STEAM).+ triggered \"Defused_The_Bomb\"" %s |wc -l`, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {
@@ -64,7 +64,6 @@ func TestAllDefusesInMemory(t *testing.T) {
 	filecount := countAllDefuses()
 
 	count := len(counter.Alldefuses)
-
 	if filecount != count {
 		t.Errorf("%s failed: filecount %d != count %d", t.Name(), filecount, count)
 	}

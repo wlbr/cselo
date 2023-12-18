@@ -10,7 +10,7 @@ import (
 )
 
 func countPlantingsPerPlayer(p string) int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+ triggered \"Planted_The_Bomb\"" %s |wc -l`, p, testfile))
+	c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<(\[U:|STEAM).+ triggered \"Planted_The_Bomb\"" %s |wc -l`, p, testfile), cmd.WithInheritedEnvironment(nil))
 
 	err := c.Execute()
 	if err != nil {
@@ -35,7 +35,7 @@ func TestPlantingsPerPlayerInMemory(t *testing.T) {
 }
 
 func countAllPlantings() int {
-	c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+ triggered \"Planted_The_Bomb\"" %s |wc -l`, testfile))
+	c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<(\[U:|STEAM).+ triggered \"Planted_The_Bomb\"" %s |wc -l`, testfile), cmd.WithInheritedEnvironment(nil))
 
 	err := c.Execute()
 	if err != nil {

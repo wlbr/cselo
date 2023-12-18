@@ -13,7 +13,7 @@ var playersrescues int = -1
 
 func countHostageRescuePerPlayer(p string) int {
 	if playersrescues == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+ triggered \"Rescued_A_Hostage\"" %s |wc -l`, p, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<(\[U:|STEAM).+ triggered \"Rescued_A_Hostage\"" %s |wc -l`, p, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {
@@ -34,7 +34,6 @@ func TestHostageRescuesPerPlayerInMemory(t *testing.T) {
 	filecount := countHostageRescuePerPlayer(player)
 
 	count := len(counter.Playersrescues)
-
 	if filecount != count {
 		t.Errorf("%s failed: filecount %d != count %d", t.Name(), filecount, count)
 	}
@@ -44,7 +43,7 @@ var allrescues int = -1
 
 func countAllHostageRescues() int {
 	if allrescues == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+ triggered \"Rescued_A_Hostage\"" %s |wc -l`, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<(\[U:|STEAM).+ triggered \"Rescued_A_Hostage\"" %s |wc -l`, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {
@@ -65,7 +64,6 @@ func TestAllHostageRescuesInMemory(t *testing.T) {
 	filecount := countAllHostageRescues()
 
 	count := len(counter.Allrescues)
-
 	if filecount != count {
 		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), filecount, count)
 	}

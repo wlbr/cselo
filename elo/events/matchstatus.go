@@ -54,9 +54,15 @@ func NewMatchStatusEvent(b *elo.BaseEvent) (e *MatchStatus) {
 	return e
 }
 
-//L 03/13/2022 - 14:09:17: MatchStatus: Score: 1:3 on map "workshop/2209334999/de_elysion" RoundsPlayed: 4
-//MatchStatus: Score: 2:0 on map "de_crete" RoundsPlayed: 2
-//MatchStatus: Score: 4:3 on map "cs_italy" RoundsPlayed: 7
+// CS2
+//
+// 11/04/2023 - 16:07:05.705 - MatchStatus: Score: 3:8 on map "de_inferno" RoundsPlayed: 11
+//
+// CSGO
+// L 03/13/2022 - 14:09:17: MatchStatus: Score: 1:3 on map "workshop/2209334999/de_elysion" RoundsPlayed: 4
+// MatchStatus: Score: 3:8 on map "de_inferno" RoundsPlayed: 11
+// MatchStatus: Score: 2:0 on map "de_crete" RoundsPlayed: 2
+// MatchStatus: Score: 4:3 on map "cs_italy" RoundsPlayed: 7
 var matchstatusrex = regexp.MustCompile(`MatchStatus: Score: (\d+):(\d+) on map \"(.+)\" RoundsPlayed: (\d+)`)
 
 func (e *MatchStatus) String() string {

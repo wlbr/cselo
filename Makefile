@@ -27,9 +27,9 @@ build: dep generate
 	GOOS=darwin GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/arm ./...
 
 run: generate
-#	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/latest.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini -import data/latest.log
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
-	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
+#	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 
 test: recreatetables
 	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log

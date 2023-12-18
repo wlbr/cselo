@@ -14,10 +14,14 @@ type Planted struct {
 	subjectTeam string
 }
 
-//"AHA<18><STEAM_1:1:689719><TERRORIST>" triggered "Planted_The_Bomb"
+// "AHA<18><STEAM_1:1:689719><TERRORIST>" triggered "Planted_The_Bomb"
+// "Jagger<0><[U:1:1363214]><TERRORIST>" triggered "Planted_The_Bomb" at bombsite A
+//"A!mn4p<0><[U:1:330202]><TERRORIST>" triggered "Planted_The_Bomb" at bombsite A
+
 var plantedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Planted_The_Bomb"`)
 
 func NewPlantedEvent(b *elo.BaseEvent) (e *Planted) {
+
 	if sm := plantedrex.FindStringSubmatch(b.Message); sm != nil {
 		pl := elo.GetPlayer(sm[1], sm[3])
 		b.Server.LastPlanter = pl

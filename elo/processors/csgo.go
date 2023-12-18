@@ -50,7 +50,7 @@ func (p *CsgoLog) Loop() {
 	defer log.Info("Finishing processor")
 }
 
-//func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
+// func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
 func (p *CsgoLog) process(b *elo.BaseEvent) {
 	// b.Server, ok := p.servers[server]
 	// if ok {

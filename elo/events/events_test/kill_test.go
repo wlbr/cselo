@@ -13,7 +13,7 @@ var playerskills int = -1
 
 func countKillsPerPlayer(p string) int {
 	if playerskills == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<STEAM.+killed.+<STEAM_" %s |wc -l`, p, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i "%s.+<(\[U:|STEAM).+killed.+<(\[U:|STEAM)" %s |wc -l`, p, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {
@@ -43,7 +43,7 @@ var allkills int = -1
 
 func countAllKills() int {
 	if allkills == -1 {
-		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<STEAM.+killed.+<STEAM_" %s |wc -l`, testfile))
+		c := cmd.NewCommand(fmt.Sprintf(`ag -i ".+<(\[U:|STEAM).+killed.+<(\[U:|STEAM)" %s |wc -l`, testfile), cmd.WithInheritedEnvironment(nil))
 
 		err := c.Execute()
 		if err != nil {

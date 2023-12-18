@@ -57,9 +57,11 @@ func (s *InMemoryCounterSink) HandleDefuseEvent(e *events.Defuse) {
 }
 
 func (s *InMemoryCounterSink) HandleBombedEvent(e *events.Bombed) {
-	s.Allbombings = append(s.Allbombings, e)
-	if s.Player == e.Subject.Name {
-		s.Playersbombings = append(s.Playersbombings, e)
+	if e.Subject != nil {
+		s.Allbombings = append(s.Allbombings, e)
+		if s.Player == e.Subject.Name {
+			s.Playersbombings = append(s.Playersbombings, e)
+		}
 	}
 }
 
