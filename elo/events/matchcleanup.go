@@ -20,5 +20,5 @@ func NewMatchCleanUpEvent(b *elo.BaseEvent, match *elo.Match) (e *MatchCleanUp) 
 }
 
 func (e *MatchCleanUp) String() string {
-	return fmt.Sprintf("MatchCleanUp  match %d", e.Match.ID)
+	return fmt.Sprintf("MatchCleanUp match %d", e.Match.ID)
 }

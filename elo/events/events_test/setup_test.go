@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/emitter"
 	"github.com/wlbr/cselo/elo/processors"
 	"github.com/wlbr/cselo/elo/sinks"
 	"github.com/wlbr/cselo/elo/sources/postgresql"
@@ -41,7 +42,7 @@ func testsetup() {
 		counter = s
 	}
 
-	emitter := elo.NewFileEmitter(config)
+	emitter := emitter.NewFileEmitter(config)
 
 	emitter.AddFilter(&elo.AllBotsFilter{})
 	emitter.AddFilter(&elo.UnknownFilter{})

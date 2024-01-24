@@ -27,7 +27,7 @@ build: dep generate
 	GOOS=darwin GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/arm ./...
 
 run: generate
-	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini -import data/latest.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 
@@ -41,8 +41,10 @@ coverage: test
 	go tool cover -html=coverage.txt
 
 deploy:
-	ssh eloarm	 mkdir -p '~/bin'
-	rsync -v --progress bin/linux/* eloarm:~/bin
+	ssh elo mkdir -p '~/bin'
+	ssh vm sudo systemctl stop cselohttp.service
+	rsync -v --progress bin/linux/arm/* elo:~/bin
+	ssh vm sudo systemctl start cselohttp.service
 
 release:
 	mkdir -p release

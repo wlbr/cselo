@@ -3,6 +3,8 @@ package elo
 import (
 	"fmt"
 	"time"
+
+	"github.com/wlbr/commons/log"
 )
 
 type Server struct {
@@ -10,6 +12,11 @@ type Server struct {
 	CurrentMatch *Match
 	LastPlanter  *Player
 	// CurrentRound *Round
+}
+
+func NewServer(ip string) *Server {
+	log.Warn("NewServer created: ip=%s", ip)
+	return &Server{IP: ip}
 }
 
 type Intervall struct {

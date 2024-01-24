@@ -14,10 +14,11 @@ type MatchStart struct {
 	*elo.BaseEvent
 	MapFullName string
 	MapName     string
+	Match       *elo.Match
 }
 
-//World triggered "Match_Start" on "de_lake"
-//World triggered "Match_Start" on "workshop/123518981/de_favela"
+// World triggered "Match_Start" on "de_lake"
+// World triggered "Match_Start" on "workshop/123518981/de_favela"
 var matchstartrex = regexp.MustCompile(`World triggered "Match_Start" on (.+)`)
 
 func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
@@ -27,7 +28,7 @@ func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
 		mn := mfn[mnpos:]
 		m := &elo.Match{MapFullName: mfn, MapName: mn, Start: b.Time, Server: b.Server}
 		b.Server.CurrentMatch = m
-		e = &MatchStart{MapFullName: m.MapFullName, MapName: m.MapName, BaseEvent: b}
+		e = &MatchStart{MapFullName: m.MapFullName, MapName: m.MapName, BaseEvent: b, Match: m}
 		log.Info("Created event: %+v", e)
 	}
 	return e

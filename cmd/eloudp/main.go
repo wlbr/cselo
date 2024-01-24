@@ -5,6 +5,7 @@ import (
 
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/emitter"
 	"github.com/wlbr/cselo/elo/processors"
 	"github.com/wlbr/cselo/elo/sinks"
 	"github.com/wlbr/cselo/net"
@@ -43,19 +44,19 @@ func main() {
 	// 	processor.AddSink(s)
 	// }
 
-	var emitter elo.Emitter
+	var emi elo.Emitter
 	if config.Elo.ImportFileName != "" {
-		emitter = elo.NewFileEmitter(config)
+		emi = emitter.NewFileEmitter(config)
 	} else {
-		emitter = elo.NewUdpEmitter(config)
+		emi = emitter.NewUdpEmitter(config)
 	}
-	emitter.AddFilter(&elo.AllBotsFilter{})
-	emitter.AddFilter(&elo.UnknownFilter{})
-	emitter.AddProcessor(processor)
+	emi.AddFilter(&elo.AllBotsFilter{})
+	emi.AddFilter(&elo.UnknownFilter{})
+	emi.AddProcessor(processor)
 
 	start := time.Now()
 
-	emitter.Loop()
+	emi.Loop()
 
 	end := time.Now()
 	elapsed := end.Sub(start)
