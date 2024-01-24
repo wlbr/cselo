@@ -10,6 +10,7 @@ import (
 )
 
 type CsgoLog struct {
+	m        *sync.Mutex
 	wg       *sync.WaitGroup
 	incoming chan *elo.BaseEvent
 	config   *elo.Config
@@ -19,8 +20,9 @@ type CsgoLog struct {
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
+	p.m = &sync.Mutex{}
 	p.servers = make(map[string]*elo.Server)
-	p.incoming = make(chan *elo.BaseEvent, 5000)
+	p.incoming = make(chan *elo.BaseEvent, cfg.Elo.BufferSize)
 	return p
 }
 
@@ -34,7 +36,9 @@ func (p *CsgoLog) AddSink(s sinks.Sink) {
 }
 
 func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
+	p.m.Lock()
 	p.incoming <- b
+	p.m.Unlock()
 }
 
 func (p *CsgoLog) Loop() {

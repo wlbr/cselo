@@ -12,6 +12,15 @@ type Filter interface {
 	Test(string) bool
 }
 
+func CheckFilter(em Emitter, m string) bool {
+	for _, f := range em.GetFilters() {
+		if f.Test(m) {
+			return true
+		}
+	}
+	return false
+}
+
 //================================
 
 var allbotsrex = regexp.MustCompile(`<BOT>`)

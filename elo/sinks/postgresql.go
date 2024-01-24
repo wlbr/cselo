@@ -265,6 +265,7 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 		RETURNING id`,
 		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0, 0).Scan(&id)
 	e.Server.CurrentMatch.ID = id
+	log.Debug("MatchStartEvent written to PostgreSQL database: %+v ID: %d", e, id)
 
 	if err != nil {
 		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)
