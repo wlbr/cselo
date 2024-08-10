@@ -21,9 +21,14 @@ func NewIncomingBuffer(cfg *Config, waitgroup *sync.WaitGroup) *IncomingBuffer {
 
 func (b *IncomingBuffer) Put(line string) {
 	if b.config.Elo.RecorderFileName != "" {
-		log.Debug("Recorder getting job: %s", line)
+		log.Info("Recorder getting job: %s", line)
 		b.im.Lock()
-		b.incoming <- line
+		if len(line) > 0 && line[len(line)-1] != '\n' {
+			b.incoming <- line + "\n"
+		} else {
+			b.incoming <- line
+		}
+		//b.incoming <- line
 		b.im.Unlock()
 	}
 }
@@ -34,7 +39,7 @@ func (b *IncomingBuffer) Get() string {
 }
 
 // func (b *IncomingBuffer) Loop() {
-// 	log.Debug("Starting incoming buffer loop.")
+// 	log.Info("Starting incoming buffer loop.")
 // 	b.wg.Add(1)
 // 	defer b.wg.Done()
 // 	for {

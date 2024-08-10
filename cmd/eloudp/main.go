@@ -52,6 +52,7 @@ func main() {
 	}
 	emi.AddFilter(&elo.AllBotsFilter{})
 	emi.AddFilter(&elo.UnknownFilter{})
+	emi.AddFilter(&elo.SteamIdPendingFilter{})
 	emi.AddProcessor(processor)
 
 	start := time.Now()

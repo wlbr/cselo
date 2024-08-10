@@ -51,7 +51,7 @@ type Emitter interface {
 
 // var shortenrex = regexp.MustCompile(`(?Um)L |(.+) - (.+)(:| -) (.*)$`)
 // var shortenrex = regexp.MustCompile(`(L )?(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)$`)
-var shortenrex = regexp.MustCompile(`(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)`)
+var shortenrex = regexp.MustCompile(`"?(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)"?$`)
 
 func ShortenMessage(str string) (timestamp time.Time, message string, err error) {
 

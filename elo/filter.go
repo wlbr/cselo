@@ -42,6 +42,25 @@ func (f *AllBotsFilter) Test(message string) bool {
 
 //================================
 
+var steamidpendingrex = regexp.MustCompile(`<STEAM_ID_PENDING>`)
+
+type SteamIdPendingFilter struct {
+}
+
+func (f *SteamIdPendingFilter) String() string {
+	return "Filters all events with STEAM_ID_PENDING players involved."
+}
+
+func (f *SteamIdPendingFilter) Test(message string) bool {
+	if steamidpendingrex.MatchString(message) {
+		log.Info("SteamIdPendingFilter: Filtered message '%s'", message)
+		return true
+	}
+	return false
+}
+
+//================================
+
 var unkownrex = regexp.MustCompile(`<unknown>`)
 
 type UnknownFilter struct {

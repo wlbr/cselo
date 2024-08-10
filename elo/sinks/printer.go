@@ -20,7 +20,7 @@ func NewPrinterSink(cfg *elo.Config) (*printerSink, error) {
 }
 
 func (s *printerSink) printToFile(e elo.Event) {
-	log.Debug("Printing  %v", e)
+	log.Info("Printing  %v", e)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	_, err := s.w.WriteString(e.String() + "\n")

@@ -14,8 +14,8 @@ type Defuse struct {
 	subjectTeam string
 }
 
-//"Jagger<19><STEAM_1:0:681607><CT>" triggered "Defused_The_Bomb"
-var defusedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Defused_The_Bomb"`)
+// "Jagger<19><STEAM_1:0:681607><CT>" triggered "Defused_The_Bomb"
+var defusedrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? triggered "?Defused_The_Bomb"?`)
 
 func NewDefuseEvent(b *elo.BaseEvent) (e *Defuse) {
 	if sm := defusedrex.FindStringSubmatch(b.Message); sm != nil {

@@ -20,9 +20,10 @@ type Kill struct {
 	Headshot        bool
 }
 
-//"Madlen<221><BOT><CT>" [2650 -3117 -130] killed "Franzi<216><BOT><TERRORIST>" [3649 -3151 -48] with "hkp2000"
-//"KiF Charlies Silence<16><STEAM_1:0:710013><TERRORIST>" [3878 -2315 -102] killed "Steffi<219><BOT><CT>" [2762 -4031 -142] with "sg556" (headshot)
-var killrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" \[(.+)\] killed "(.+)<(.+)><(.+)><(.+)>" \[(.+)\] with "(.+)"( \((headshot)\))?`)
+// "Madlen<221><BOT><CT>" [2650 -3117 -130] killed "Franzi<216><BOT><TERRORIST>" [3649 -3151 -48] with "hkp2000"
+// "KiF Charlies Silence<16><STEAM_1:0:710013><TERRORIST>" [3878 -2315 -102] killed "Steffi<219><BOT><CT>" [2762 -4031 -142] with "sg556" (headshot)
+// var killrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? \[(.+)\] killed "?(.+)<(.+)><(.+)><(.+)>"? \[(.+)\] with "?(.+)"?( \((headshot)\))?`)
+var killrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? \[(.+)\] killed "?(.+)<(.+)><(.+)><(.+)>"? \[(.+)\] with "(.+)"( \((headshot)\))?`)
 
 func NewKillEvent(b *elo.BaseEvent) (e *Kill) {
 	if sm := killrex.FindStringSubmatch(b.Message); sm != nil {

@@ -20,9 +20,9 @@ func NewServerHibernationEvent(b *elo.BaseEvent) (e *ServerHibernation) {
 	return e
 }
 
-//L 03/17/2022 - 22:07:11: "GOTV<42><BOT><Unassigned>" disconnected (reason "Punting bot, server is hibernating")
-//"GOTV<42><BOT><Unassigned>" disconnected (reason "Punting bot, server is hibernating")
-var hibrex = regexp.MustCompile(`"GOTV<\d+><BOT><Unassigned>" disconnected \(reason "Punting bot, server is hibernating"\)`)
+// L 03/17/2022 - 22:07:11: "GOTV<42><BOT><Unassigned>" disconnected (reason "Punting bot, server is hibernating")
+// "GOTV<42><BOT><Unassigned>" disconnected (reason "Punting bot, server is hibernating")
+var hibrex = regexp.MustCompile(`"?GOTV<\d+><BOT><Unassigned>"? disconnected \(reason "?Punting bot, server is hibernating"?\)`)
 
 func (e *ServerHibernation) String() string {
 	return fmt.Sprintf("Hibernation of server %s at %v", e.Server.IP, e.Time)

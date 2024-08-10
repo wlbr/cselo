@@ -63,7 +63,7 @@ func NewMatchStatusEvent(b *elo.BaseEvent) (e *MatchStatus) {
 // MatchStatus: Score: 3:8 on map "de_inferno" RoundsPlayed: 11
 // MatchStatus: Score: 2:0 on map "de_crete" RoundsPlayed: 2
 // MatchStatus: Score: 4:3 on map "cs_italy" RoundsPlayed: 7
-var matchstatusrex = regexp.MustCompile(`MatchStatus: Score: (\d+):(\d+) on map \"(.+)\" RoundsPlayed: (\d+)`)
+var matchstatusrex = regexp.MustCompile(`MatchStatus: Score: (\d+):(\d+) on map "?(.+)" RoundsPlayed: (\d+)`)
 
 func (e *MatchStatus) String() string {
 	return fmt.Sprintf("Matchstatus %d:%d", e.ScoreA, e.ScoreB)

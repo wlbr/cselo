@@ -5,3 +5,6 @@ package model
 type Dummy struct {
 	ID string `json:"id"`
 }
+
+type Query struct {
+}

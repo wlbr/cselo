@@ -42,6 +42,7 @@ eloupd
 *.sublime-project
 .idea/
 .vscode/
+.zed/
 
 #binaries and generated stuff
 bin/

@@ -18,7 +18,7 @@ type Planted struct {
 // "Jagger<0><[U:1:1363214]><TERRORIST>" triggered "Planted_The_Bomb" at bombsite A
 //"A!mn4p<0><[U:1:330202]><TERRORIST>" triggered "Planted_The_Bomb" at bombsite A
 
-var plantedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Planted_The_Bomb"`)
+var plantedrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? triggered "?Planted_The_Bomb"?`)
 
 func NewPlantedEvent(b *elo.BaseEvent) (e *Planted) {
 

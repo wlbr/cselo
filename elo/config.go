@@ -78,7 +78,7 @@ func (c *Config) String() string {
 }
 
 func (cfg Config) CheckForceOverwrite() {
-	log.Debug("Checking forceoverwrite parameter = %t", cfg.Elo.ForceOverwrite)
+	log.Info("Checking forceoverwrite parameter = %t", cfg.Elo.ForceOverwrite)
 	if cfg.Elo.OutputFileName != "" && cfg.Elo.OutputFileName != "<STDOUT>" {
 		info, err := os.Stat(cfg.Elo.OutputFileName)
 		if err == nil {
@@ -97,7 +97,7 @@ func (cfg Config) CheckForceOverwrite() {
 
 func (cfg *Config) FlagDefinition() {
 	cfg.CommonConfig.FlagDefinition()
-	flag.StringVar(&cfg.Elo.Port, "port", "42820", "The UDP port to listen on.")
+	flag.StringVar(&cfg.Elo.Port, "port", "42820", "The port to listen on.")
 	flag.StringVar(&cfg.Elo.ImportFileName, "import", "", "Use a captured logfile instead of listening to the net.")
 	flag.StringVar(&cfg.Elo.RecorderFileName, "rec", "", "Save captured data to file.")
 	flag.BoolVar(&cfg.Elo.ForceOverwrite, "f", false, "Overwrite all output files.")
@@ -135,7 +135,7 @@ func (cfg *Config) Initialize(version string, buildtimestamp string) *Config {
 		cfg.AddCleanUpFn(cfg.Elo.OutputFile.Close)
 	}
 
-	if cfg.ActiveLogLevel > log.DEBUG {
+	if cfg.ActiveLogLevel >= log.INFO {
 		fmt.Println(cfg.GetInspectData())
 		fmt.Println(cfg.String())
 	}

@@ -9,8 +9,8 @@ import (
 )
 
 type Recorder struct {
-	config   *Config
-	cm, fm   *sync.Mutex
+	config *Config
+	//cm, fm   *sync.Mutex
 	wg       *sync.WaitGroup
 	incoming chan string
 	filename string
@@ -19,10 +19,11 @@ type Recorder struct {
 }
 
 func NewRecorder(cfg *Config, waitgroup *sync.WaitGroup) *Recorder {
-	r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, cm: &sync.Mutex{}, fm: &sync.Mutex{}, incoming: make(chan string, cfg.Elo.BufferSize), wg: waitgroup}
+	//r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, cm: &sync.Mutex{}, fm: &sync.Mutex{}, incoming: make(chan string, cfg.Elo.BufferSize), wg: waitgroup}
+	r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, incoming: make(chan string), wg: waitgroup}
 
 	if cfg.Elo.RecorderFileName != "" {
-		log.Debug("Creating new Recorder with filename '%s'", r.filename)
+		log.Info("Creating new Recorder with filename '%s'", r.filename)
 		info, err := os.Stat(cfg.Elo.RecorderFileName)
 		if err == nil {
 			if info.IsDir() {
@@ -51,27 +52,27 @@ func NewRecorder(cfg *Config, waitgroup *sync.WaitGroup) *Recorder {
 }
 
 func (r *Recorder) writeLine(line string) {
-	r.fm.Lock()
-	log.Debug("Recording: " + line)
+	//r.fm.Lock()
+	log.Info("Recording: " + line)
 	_, err := r.wbuf.WriteString(line)
 	r.wbuf.Flush()
 	if err != nil {
 		log.Fatal("Could not write line to recorder file '%s': %s", r.filename, err)
 		r.config.FatalExit()
 	}
-	r.fm.Unlock()
+	//r.fm.Unlock()
 }
 
 func (r *Recorder) Record(line string) {
 	if r.config.Elo.RecorderFileName != "" {
-		log.Debug("Recorder getting job: %s", line)
-		r.cm.Lock()
+		log.Info("Recorder getting job: %s", line)
+		//r.cm.Lock()
 		if len(line) > 0 && line[len(line)-1] != '\n' {
 			r.incoming <- line + "\n"
 		} else {
 			r.incoming <- line
 		}
-		r.cm.Unlock()
+		//r.cm.Unlock()
 	}
 }
 
@@ -79,7 +80,7 @@ func (r *Recorder) Loop() {
 	if r.config.Elo.RecorderFileName == "" {
 		log.Info("Skipping recorder loop, no filename given.")
 	} else {
-		log.Debug("Starting recorder loop.")
+		log.Info("Starting recorder loop.")
 		r.wg.Add(1)
 		defer r.wg.Done()
 		for {

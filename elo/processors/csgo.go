@@ -22,7 +22,7 @@ func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
 	p.m = &sync.Mutex{}
 	p.servers = make(map[string]*elo.Server)
-	p.incoming = make(chan *elo.BaseEvent, cfg.Elo.BufferSize)
+	p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
 	return p
 }
 
@@ -36,9 +36,7 @@ func (p *CsgoLog) AddSink(s sinks.Sink) {
 }
 
 func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
-	p.m.Lock()
 	p.incoming <- b
-	p.m.Unlock()
 }
 
 func (p *CsgoLog) Loop() {
@@ -56,11 +54,6 @@ func (p *CsgoLog) Loop() {
 
 // func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
 func (p *CsgoLog) process(b *elo.BaseEvent) {
-	// b.Server, ok := p.servers[server]
-	// if ok {
-	// 	b.Server = &elo.Server{IP: server}
-	// 	p.servers[server] = b.Server
-	// }
 	if b.Server.CurrentMatch == nil {
 		match := &elo.Match{MapFullName: "unknown", MapName: "unknown", Start: b.Time, Server: b.Server}
 		b.Server.CurrentMatch = match

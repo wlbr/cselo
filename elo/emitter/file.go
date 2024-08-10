@@ -60,7 +60,7 @@ func (em *fileEmitter) GetFilters() []elo.Filter {
 }
 
 func (em *fileEmitter) Loop() {
-	log.Debug("Starting file emitter loop.")
+	log.Info("Starting file emitter loop.")
 	f, err := os.Open(em.config.Elo.ImportFileName)
 	if err != nil {
 		log.Fatal("Error opening import CsLogFile '%s':  %s", em.config.Elo.ImportFileName, err)

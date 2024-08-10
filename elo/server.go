@@ -10,6 +10,7 @@ import (
 type Server struct {
 	IP           string
 	CurrentMatch *Match
+	LastMatch    *Match
 	LastPlanter  *Player
 	// CurrentRound *Round
 }

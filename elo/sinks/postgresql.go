@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
@@ -14,7 +15,7 @@ import (
 
 type PostgresSink struct {
 	config  *elo.Config
-	db      *pgx.Conn
+	db      *pgxpool.Pool
 	discord *net.DiscordSender
 }
 
@@ -48,13 +49,14 @@ func NewPostgresSink(cfg *elo.Config, discord *net.DiscordSender) (*PostgresSink
 		err = fmt.Errorf("No PostgresQL database name given")
 	}
 	if err == nil {
-		s.db, err = pgx.Connect(context.Background(), dbinfo)
+		s.db, err = pgxpool.New(context.Background(), dbinfo)
 		if err != nil {
 			log.Error("Cannot open PostgresQL database: %v", err)
 		}
 		cfg.AddCleanUpFn(func() error {
 			log.Info("Cleanup - closing PostgreSQL database connection")
-			return s.db.Close(context.Background())
+			s.db.Close()
+			return nil
 		})
 		log.Info("Established PostgreSQL database connection")
 	} else {
@@ -265,7 +267,7 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 		RETURNING id`,
 		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0, 0).Scan(&id)
 	e.Server.CurrentMatch.ID = id
-	log.Debug("MatchStartEvent written to PostgreSQL database: %+v ID: %d", e, id)
+	log.Info("MatchStartEvent written to PostgreSQL database: %+v ID: %d", e, id)
 
 	if err != nil {
 		log.Error("Cannot store MATCHSTART in PostgresQL database: %v  message:`%s'", err, e.Message)
@@ -309,8 +311,7 @@ func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 
 func (s *PostgresSink) cascadedDeleteMatch(m *elo.Match, tablename string) {
 	// Delete all players
-	if _, err := s.db.Exec(context.Background(),
-		fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID); err != nil {
+	if _, err := s.db.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID); err != nil {
 		log.Error("Cannot clean table %s for match-to-be-deleted %v from PostgresQL database: %v", tablename, m.ID, err)
 	}
 }
@@ -343,7 +344,7 @@ func (s *PostgresSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {
 		}
 
 	} else {
-		log.Info("NOT Cleaning empty match: %+v", e.Match.ID)
+		log.Info("NOT Cleaning match, match is not empty: %+v", e.Match.ID)
 		var matchstart, matchend time.Time
 		s.db.QueryRow(context.Background(), "SELECT matchstart, matchend FROM matches WHERE id=$1", e.Match.ID).Scan(&matchstart, &matchend)
 		if matchend.IsZero() {

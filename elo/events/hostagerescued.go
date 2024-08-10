@@ -18,7 +18,7 @@ type HostageRescued struct {
 // "Jagger<19><STEAM_1:0:681607><CT>" triggered "Rescued_A_Hostage"
 // CS2
 // "Jagger<0><[U:1:1363214]><CT>" triggered "Rescued_A_Hostage"
-var rescuedrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" triggered "Rescued_A_Hostage"`)
+var rescuedrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? triggered "?Rescued_A_Hostage"?`)
 
 func NewHostageRescuedEvent(b *elo.BaseEvent) (e *HostageRescued) {
 	if sm := rescuedrex.FindStringSubmatch(b.Message); sm != nil {

@@ -19,7 +19,7 @@ type MatchStart struct {
 
 // World triggered "Match_Start" on "de_lake"
 // World triggered "Match_Start" on "workshop/123518981/de_favela"
-var matchstartrex = regexp.MustCompile(`World triggered "Match_Start" on (.+)`)
+var matchstartrex = regexp.MustCompile(`World triggered "?Match_Start"? on "?(.+)"?`)
 
 func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
 	if sm := matchstartrex.FindStringSubmatch(b.Message); sm != nil {
@@ -35,5 +35,5 @@ func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
 }
 
 func (e *MatchStart) String() string {
-	return fmt.Sprintf("Match start at %s", e.Time.Format(time.RFC822Z))
+	return fmt.Sprintf("Match start at %s on map %s", e.Time.Format(time.RFC822Z), e.MapName)
 }

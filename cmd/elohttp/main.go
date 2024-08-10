@@ -52,6 +52,7 @@ func main() {
 	}
 	emi.AddFilter(&elo.AllBotsFilter{})
 	emi.AddFilter(&elo.UnknownFilter{})
+	emi.AddFilter(&elo.SteamIdPendingFilter{})
 	emi.AddProcessor(processor)
 
 	start := time.Now()
@@ -64,13 +65,13 @@ func main() {
 	defer log.Warn("Shutting down, been up for %s\n", elapsed)
 }
 
-type playerkill struct {
-	//player string
-	count int
-}
+// type playerkill struct {
+// 	//player string
+// 	count int
+// }
 
-type ByCount []*playerkill
+// type ByCount []*playerkill
 
-func (a ByCount) Len() int           { return len(a) }
-func (a ByCount) Less(i, j int) bool { return a[i].count > a[j].count }
-func (a ByCount) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+// func (a ByCount) Len() int           { return len(a) }
+// func (a ByCount) Less(i, j int) bool { return a[i].count > a[j].count }
+// func (a ByCount) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

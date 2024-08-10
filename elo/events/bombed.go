@@ -23,8 +23,8 @@ func NewBombedEvent(b *elo.BaseEvent) (e *Bombed) {
 	return e
 }
 
-//Team "TERRORIST" triggered "SFUI_Notice_Target_Bombed" (CT "2") (T "2")
-var bombeddrex = regexp.MustCompile(`Team "(.+)" triggered "SFUI_Notice_Target_Bombed" \((.+) "(.+)"\) \((.+) "(.+)"\)`)
+// Team "TERRORIST" triggered "SFUI_Notice_Target_Bombed" (CT "2") (T "2")
+var bombeddrex = regexp.MustCompile(`Team "?(.+)"? triggered "?SFUI_Notice_Target_Bombed"? \((.+) "?(.+)"?\) \((.+) "?(.+)"?\)`)
 
 func (e *Bombed) String() string {
 	return fmt.Sprintf("Bomb exploded, planted by %s", e.Subject)

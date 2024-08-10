@@ -8,9 +8,9 @@ import (
 	"github.com/wlbr/cselo/elo"
 )
 
-//"Tina<217><BOT><CT>" assisted killing "Franzi<216><BOT><TERRORIST>"
-//"Jagger<19><STEAM_1:0:681607><TERRORIST>" assisted killing "AHA<199><STEAM_1:1:689719><CT>"
-var assistrex = regexp.MustCompile(`"(.+)<(.+)><(.+)><(.+)>" assisted killing "(.+)<(.+)><(.+)><(.+)>"`)
+// "Tina<217><BOT><CT>" assisted killing "Franzi<216><BOT><TERRORIST>"
+// "Jagger<19><STEAM_1:0:681607><TERRORIST>" assisted killing "AHA<199><STEAM_1:1:689719><CT>"
+var assistrex = regexp.MustCompile(`"?(.+)<(.+)><(.+)><(.+)>"? assisted killing "?(.+)<(.+)><(.+)><(.+)>"?`)
 
 type Assist struct {
 	*elo.BaseEvent
