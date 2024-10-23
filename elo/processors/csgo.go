@@ -130,13 +130,13 @@ func (p *CsgoLog) process(b *elo.BaseEvent) {
 		}
 		return
 	}
-	oldmatch := b.Server.CurrentMatch
+	//oldmatch := b.Server.CurrentMatch
 	if e := events.NewMatchStartEvent(b); e != nil {
 		for _, s := range p.sinks {
 			s.HandleMatchStartEvent(e)
 		}
 		//c := events.NewMatchCleanUpEvent(b.Server, e.Time, fmt.Sprintf("MatchCleanUp: Check for empty match %d", oldmatch.ID), oldmatch)
-		c := events.NewMatchCleanUpEvent(b, oldmatch)
+		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch)
 		for _, s := range p.sinks {
 			s.HandleMatchCleanUpEvent(c)
 		}
@@ -152,7 +152,7 @@ func (p *CsgoLog) process(b *elo.BaseEvent) {
 		for _, s := range p.sinks {
 			s.HandleServerHibernationEvent(e)
 		}
-		c := events.NewMatchCleanUpEvent(b, oldmatch)
+		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch)
 		for _, s := range p.sinks {
 			s.HandleMatchCleanUpEvent(c)
 		}

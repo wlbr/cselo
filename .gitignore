@@ -43,6 +43,7 @@ eloupd
 .idea/
 .vscode/
 .zed/
+.fleet/
 
 #binaries and generated stuff
 bin/

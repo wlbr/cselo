@@ -10,8 +10,7 @@ import (
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 
-	log.Info("Receiving request.")
-	log.Info("Request %+v", r)
+	log.Info("Receiving request.  %+v", r)
 
 	keys, ok := r.URL.Query()["id"]
 
