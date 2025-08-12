@@ -15,9 +15,10 @@ dep:
 	go install github.com/99designs/gqlgen
 
 generate:
+	@echo Running generate job...
 	gqlgen
 
-build: dep generate
+build: dep #generate
 	@echo Running build job...
 	mkdir -p bin/linux/arm bin/linux/x64 bin/windows bin/mac/x64 bin/mac/arm
 	GOOS=linux GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/linux/arm ./...
@@ -26,7 +27,7 @@ build: dep generate
 	GOOS=darwin GOARCH=amd64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/x64 ./...
 	GOOS=darwin GOARCH=arm64 go build  -ldflags "$(LINKERFLAGS)" -o bin/mac/arm ./...
 
-run: generate
+run: #generate
 	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini

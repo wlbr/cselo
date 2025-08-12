@@ -1,8 +1,6 @@
 package processors
 
 import (
-	"sync"
-
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
@@ -10,8 +8,6 @@ import (
 )
 
 type CsgoLog struct {
-	m        *sync.Mutex
-	wg       *sync.WaitGroup
 	incoming chan *elo.BaseEvent
 	config   *elo.Config
 	sinks    []sinks.Sink
@@ -20,15 +16,15 @@ type CsgoLog struct {
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
-	p.m = &sync.Mutex{}
+	//p.m = &sync.Mutex{}
 	p.servers = make(map[string]*elo.Server)
 	p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
 	return p
 }
 
-func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
-	p.wg = wg
-}
+// func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
+// 	p.wg = wg
+// }
 
 func (p *CsgoLog) AddSink(s sinks.Sink) {
 	log.Info("Adding sink to CsgoLog processor: %#v", s)
@@ -40,8 +36,8 @@ func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
 }
 
 func (p *CsgoLog) Loop() {
-	p.wg.Add(1)
-	defer p.wg.Done()
+	// p.wg.Add(1)
+	// defer p.wg.Done()
 	for {
 		e := <-p.incoming
 		p.process(e)
@@ -54,9 +50,11 @@ func (p *CsgoLog) Loop() {
 
 // func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
 func (p *CsgoLog) process(b *elo.BaseEvent) {
-	if b.Server.CurrentMatch == nil {
-		match := &elo.Match{MapFullName: "unknown", MapName: "unknown", Start: b.Time, Server: b.Server}
-		b.Server.CurrentMatch = match
+	log.Info("Processing event: %s - %v", b.Message, b.Server.CurrentMatch())
+	if b.Server.CurrentMatch() == nil {
+		log.Info("No current match, creating a new one.")
+		match := elo.NewMatch("unknown", "unknown", b.Time, b.Server)
+		b.Server.SetCurrentMatch(match)
 		mse := &events.MatchStart{
 			BaseEvent: &elo.BaseEvent{
 				Server:  b.Server,
@@ -136,7 +134,7 @@ func (p *CsgoLog) process(b *elo.BaseEvent) {
 			s.HandleMatchStartEvent(e)
 		}
 		//c := events.NewMatchCleanUpEvent(b.Server, e.Time, fmt.Sprintf("MatchCleanUp: Check for empty match %d", oldmatch.ID), oldmatch)
-		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch)
+		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch())
 		for _, s := range p.sinks {
 			s.HandleMatchCleanUpEvent(c)
 		}
@@ -152,7 +150,7 @@ func (p *CsgoLog) process(b *elo.BaseEvent) {
 		for _, s := range p.sinks {
 			s.HandleServerHibernationEvent(e)
 		}
-		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch)
+		c := events.NewMatchCleanUpEvent(b, b.Server.LastMatch())
 		for _, s := range p.sinks {
 			s.HandleMatchCleanUpEvent(c)
 		}

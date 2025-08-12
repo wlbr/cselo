@@ -115,7 +115,7 @@ func (s *PostgresSink) HandleKillEvent(e *events.Kill) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO kills (match, actor, victim, headshot, weapon, timestmp) VALUES ($1, $2, $3, $4, $5, $6)",
-		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Headshot, e.Weapon, e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, object.ID, e.Headshot, e.Weapon, e.Time)
 	if err != nil {
 		log.Error("Cannot store KILL in PostgresQL database: %v", err)
 	}
@@ -129,7 +129,7 @@ func (s *PostgresSink) HandleAssistEvent(e *events.Assist) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO assists (match, actor, victim, timestmp) VALUES ($1, $2, $3, $4)",
-		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, object.ID, e.Time)
 	if err != nil {
 		log.Error("Cannot store ASSIST in PostgresQL database: %v", err)
 	}
@@ -160,7 +160,7 @@ func (s *PostgresSink) HandleBlindedEvent(e *events.Blinded) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO blindings (match, actor, victim, duration,victimtype, timestmp) VALUES ($1, $2, $3, $4, $5, $6)",
-		e.Server.CurrentMatch.ID, subject.ID, object.ID, e.Duration, t, e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, object.ID, e.Duration, t, e.Time)
 	if err != nil {
 		log.Error("Cannot store BLINDING in PostgresQL database: %v", err)
 	}
@@ -185,7 +185,7 @@ func (s *PostgresSink) HandleGrenadeEvent(e *events.Grenade) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO grenadethrows (match, actor, grenadetype, timestmp) VALUES ($1, $2, $3, $4)",
-		e.Server.CurrentMatch.ID, subject.ID, e.GrenadeType, e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, e.GrenadeType, e.Time)
 	if err != nil {
 		log.Error("Cannot store GRENADETRHOW in PostgresQL database: %v", err)
 	}
@@ -198,7 +198,7 @@ func (s *PostgresSink) HandlePlantedEvent(e *events.Planted) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO scoreaction (match, actor, actiontype, timestmp) VALUES ($1, $2, $3, $4)",
-		e.Server.CurrentMatch.ID, subject.ID, "planting", e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, "planting", e.Time)
 	if err != nil {
 		log.Error("Cannot store PLANTING in PostgresQL database: %v", err)
 	}
@@ -211,7 +211,7 @@ func (s *PostgresSink) HandleDefuseEvent(e *events.Defuse) {
 		subject := s.GetOrStorePlayerbySteamID(e.Subject)
 		_, err := s.db.Exec(context.Background(),
 			"INSERT INTO scoreaction (match, actor, actiontype, timestmp) VALUES ($1, $2, $3, $4)",
-			e.Server.CurrentMatch.ID, subject.ID, "defuse", e.Time)
+			e.Server.CurrentMatch().ID(), subject.ID, "defuse", e.Time)
 		if err != nil {
 			log.Error("Cannot store DEFUSE in PostgresQL database: %v", err)
 		}
@@ -225,7 +225,7 @@ func (s *PostgresSink) HandleBombedEvent(e *events.Bombed) {
 		subject := s.GetOrStorePlayerbySteamID(e.Subject)
 		_, err := s.db.Exec(context.Background(),
 			"INSERT INTO scoreaction (match, actor, actiontype, timestmp) VALUES ($1, $2, $3, $4)",
-			e.Server.CurrentMatch.ID, subject.ID, "bombing", e.Time)
+			e.Server.CurrentMatch().ID(), subject.ID, "bombing", e.Time)
 		if err != nil {
 			log.Error("Cannot store BOMBING in PostgresQL database: %v", err)
 		}
@@ -239,7 +239,7 @@ func (s *PostgresSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO scoreaction (match, actor, actiontype, timestmp) VALUES ($1, $2, $3, $4)",
-		e.Server.CurrentMatch.ID, subject.ID, "rescue", e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, "rescue", e.Time)
 	if err != nil {
 		log.Error("Cannot store RESCUE in PostgresQL database: %v", err)
 	}
@@ -249,11 +249,12 @@ func (s *PostgresSink) HandleHostageRescuedEvent(e *events.HostageRescued) {
 // e.GameMode, e.MapGroup, e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Duration, e.MatchEnd, e.Time)
 func (s *PostgresSink) HandleMatchEndEvent(e *events.MatchEnd) {
 	log.Info("Writing game over event to PostgreSQL database: %+v", e)
-	m := e.Server.CurrentMatch
+	m := e.Server.CurrentMatch()
+	log.Info("MatchEndEvent postgres: %d %s %s", m.ID(), m.MapName, m.End)
 	_, err := s.db.Exec(context.Background(), `UPDATE matches
 		SET gamemode=$2, mapgroup=$3, mapfullname=$4, mapname=$5, scorea=$6, scoreb=$7, duration=$8, matchend=$9, timestmp=$10, completed=$11
 		WHERE id=$1`,
-		m.ID, m.GameMode, m.MapGroup, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time, e.Completed)
+		m.ID(), m.GameMode, m.MapGroup, m.MapFullName(), m.MapName, m.ScoreA, m.ScoreB, m.Duration, m.End, e.Time, e.Completed)
 	if err != nil {
 		log.Error("Cannot store MATCHEND in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
@@ -266,7 +267,7 @@ func (s *PostgresSink) HandleMatchStartEvent(e *events.MatchStart) {
 		`INSERT INTO matches (mapfullname, mapname, matchstart, timestmp, scorea, scoreb, rounds) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`,
 		e.MapFullName, e.MapName, e.Time, e.Time, 0, 0, 0).Scan(&id)
-	e.Server.CurrentMatch.ID = id
+	e.Server.CurrentMatch().SetID(id)
 	log.Info("MatchStartEvent written to PostgreSQL database: %+v ID: %d", e, id)
 
 	if err != nil {
@@ -284,11 +285,11 @@ func (s *PostgresSink) HandleServerHibernationEvent(e *events.ServerHibernation)
 // e.MapFullName, e.MapName, e.ScoreA, e.ScoreB, e.Rounds, e.Time)
 func (s *PostgresSink) HandleMatchStatusEvent(e *events.MatchStatus) {
 	log.Info("Writing match status event to PostgreSQL database: %+v", e)
-	m := e.Server.CurrentMatch
+	m := e.Server.CurrentMatch()
 	_, err := s.db.Exec(context.Background(), `UPDATE matches
 		SET  mapfullname=$2, mapname=$3, scorea=$4, scoreb=$5, rounds=$6, timestmp=$7
 		WHERE id=$1`,
-		m.ID, m.MapFullName, m.MapName, m.ScoreA, m.ScoreB, m.Rounds, e.Time)
+		m.ID(), m.MapFullName(), m.MapName, m.ScoreA, m.ScoreB, m.Rounds, e.Time)
 	if err != nil {
 		log.Error("Cannot store MATCHSTATUS in PostgresQL database: %v  message:`%s'", err, e.Message)
 	}
@@ -303,7 +304,7 @@ func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 
 	_, err := s.db.Exec(context.Background(),
 		"INSERT INTO accolade (match, actor, accoladetype, position, accoladevalue, score, timestmp) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-		e.Server.CurrentMatch.ID, subject.ID, e.Type, e.Position, e.Value, e.Score, e.Time)
+		e.Server.CurrentMatch().ID(), subject.ID, e.Type, e.Position, e.Value, e.Score, e.Time)
 	if err != nil {
 		log.Error("Cannot store ACCOLADE in PostgresQL database: %v", err)
 	}
@@ -311,20 +312,20 @@ func (s *PostgresSink) HandleAccoladeEvent(e *events.Accolade) {
 
 func (s *PostgresSink) cascadedDeleteMatch(m *elo.Match, tablename string) {
 	// Delete all players
-	if _, err := s.db.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID); err != nil {
-		log.Error("Cannot clean table %s for match-to-be-deleted %v from PostgresQL database: %v", tablename, m.ID, err)
+	if _, err := s.db.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE match=$1", tablename), m.ID()); err != nil {
+		log.Error("Cannot clean table %s for match-to-be-deleted %v from PostgresQL database: %v", tablename, m.ID(), err)
 	}
 }
 
 func (s *PostgresSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {
 	var count int
-	s.db.QueryRow(context.Background(), "SELECT COUNT(kills.id) FROM kills WHERE match=$1", e.Match.ID).Scan(&count)
+	s.db.QueryRow(context.Background(), "SELECT COUNT(kills.id) FROM kills WHERE match=$1", e.Match.ID()).Scan(&count)
 	if count == 0 {
-		log.Info("Cleaning empty match: %+v", e.Match.ID)
+		log.Info("Cleaning empty match: %+v", e.Match.ID())
 		tables := []string{"accolade", "assists", "blindings", "grenadethrows", "kills", "scoreaction"} // "plantings",
 		tx, err := s.db.Begin(context.Background())
 		if err != nil {
-			log.Error("Cannot open transaction for deletion of match %d : %v", e.Match.ID, err)
+			log.Error("Cannot open transaction for deletion of match %d : %v", e.Match.ID(), err)
 		}
 		defer tx.Rollback(context.Background())
 
@@ -335,25 +336,25 @@ func (s *PostgresSink) HandleMatchCleanUpEvent(e *events.MatchCleanUp) {
 		for _, t := range tables {
 			s.cascadedDeleteMatch(e.Match, t)
 		}
-		if _, err := s.db.Exec(context.Background(), "DELETE FROM matches WHERE id=$1", e.Match.ID); err != nil {
-			log.Error("Cannot clean match-to-be-deleted %v from PostgresQL database: %v", e.Match.ID, err)
+		if _, err := s.db.Exec(context.Background(), "DELETE FROM matches WHERE id=$1", e.Match.ID()); err != nil {
+			log.Error("Cannot clean match-to-be-deleted %v from PostgresQL database: %v", e.Match.ID(), err)
 		}
 		err = tx.Commit(context.Background())
 		if err != nil {
-			log.Error("Cannot commit transaction for deletion of match %d : %v", e.Match.ID, err)
+			log.Error("Cannot commit transaction for deletion of match %d : %v", e.Match.ID(), err)
 		}
 
 	} else {
-		log.Info("NOT Cleaning match, match is not empty: %+v", e.Match.ID)
+		log.Info("NOT Cleaning match, match is not empty: %+v", e.Match.ID())
 		var matchstart, matchend time.Time
-		s.db.QueryRow(context.Background(), "SELECT matchstart, matchend FROM matches WHERE id=$1", e.Match.ID).Scan(&matchstart, &matchend)
+		s.db.QueryRow(context.Background(), "SELECT matchstart, matchend FROM matches WHERE id=$1", e.Match.ID()).Scan(&matchstart, &matchend)
 		if matchend.IsZero() {
 			matchend = e.Time
 			duration := matchend.Sub(matchstart)
-			log.Info("Setting matchend in match %d to %v", e.Match.ID, matchend)
-			_, err := s.db.Exec(context.Background(), "UPDATE matches SET matchend=$1, duration=$2 WHERE id=$3", matchend, duration, e.Match.ID)
+			log.Info("Setting matchend in match %d to %v", e.Match.ID(), matchend)
+			_, err := s.db.Exec(context.Background(), "UPDATE matches SET matchend=$1, duration=$2 WHERE id=$3", matchend, duration, e.Match.ID())
 			if err != nil {
-				log.Error("cannot set  matchend in match %d to %v: %v", e.Match.ID, matchend, err)
+				log.Error("cannot set  matchend in match %d to %v: %v", e.Match.ID(), matchend, err)
 			}
 		}
 	}

@@ -26,10 +26,11 @@ func NewMatchStartEvent(b *elo.BaseEvent) (e *MatchStart) {
 		mfn := strings.ReplaceAll(sm[1], `"`, "")
 		mnpos := strings.LastIndex(mfn, "/") + 1
 		mn := mfn[mnpos:]
-		m := &elo.Match{MapFullName: mfn, MapName: mn, Start: b.Time, Server: b.Server}
-		b.Server.LastMatch = b.Server.CurrentMatch
-		b.Server.CurrentMatch = m
-		e = &MatchStart{MapFullName: m.MapFullName, MapName: m.MapName, BaseEvent: b, Match: m}
+		m := elo.NewMatch(mfn, mn, b.Time, b.Server)
+		// b.Server.LastMatch = b.Server.CurrentMatch
+		// b.Server.CurrentMatch = m
+		b.Server.SetCurrentMatch(m)
+		e = &MatchStart{MapFullName: m.MapFullName(), MapName: m.MapName, BaseEvent: b, Match: m}
 		log.Info("Created event: %+v", e)
 	}
 	return e

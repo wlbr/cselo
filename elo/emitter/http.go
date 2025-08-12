@@ -56,7 +56,7 @@ func (em *httpEmitter) WaitForProcessors() {
 
 func (em *httpEmitter) AddProcessor(p elo.Processor) {
 	em.procs = append(em.procs, p)
-	p.AddWaitGroup(em.wg)
+	//p.AddWaitGroup(em.wg)
 	go p.Loop()
 }
 
@@ -127,7 +127,7 @@ func (em *httpEmitter) Loop() {
 
 	log.Info("Starting to listen on port %s", port)
 	err := s.ListenAndServe()
-
+	log.Info("Ended listening on port %s", port)
 	// go func() {
 	// 	if err := http.ListenAndServe(":"+port, handler.HandleFastHTTP); err != nil {
 	// 		log.Fatal("error in ListenAndServe: %v", err)
@@ -208,7 +208,7 @@ func (h *csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error("Problem reading request body: %v", err)
 		} else {
-			go h.pushMessage(strings.Clone(string(buf)))
+			h.pushMessage(strings.Clone(string(buf)))
 		}
 
 	}

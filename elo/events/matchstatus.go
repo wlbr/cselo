@@ -34,21 +34,13 @@ func NewMatchStatusEvent(b *elo.BaseEvent) (e *MatchStatus) {
 		if err != nil {
 			log.Error("Cannot read rounds in match status (got %s). %v", gom[4], err)
 		}
-		b.Server.CurrentMatch.MapFullName = gom[3]
 
 		mnpos := strings.LastIndex(gom[3], "/") + 1
 		mn := gom[3][mnpos:]
-		b.Server.CurrentMatch.MapName = mn
 
-		b.Server.CurrentMatch.ScoreA = scorea
-		b.Server.CurrentMatch.ScoreB = scoreb
+		//b.Server.CurrentMatch().SetStatusAttributes(gom[3], mn, scorea, scoreb, rounds)
 
-		b.Server.CurrentMatch.Rounds = rounds
-
-		e = &MatchStatus{MapFullName: b.Server.CurrentMatch.MapFullName, MapName: b.Server.CurrentMatch.MapName,
-			ScoreA: b.Server.CurrentMatch.ScoreA, ScoreB: b.Server.CurrentMatch.ScoreB,
-			Rounds:    b.Server.CurrentMatch.Rounds,
-			BaseEvent: b}
+		e = &MatchStatus{MapFullName: gom[3], MapName: mn, ScoreA: scorea, ScoreB: scoreb, Rounds: rounds, BaseEvent: b}
 		log.Info("Created event: %#v", e)
 	}
 	return e

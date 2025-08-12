@@ -73,7 +73,7 @@ func (s *InMemoryCounterSink) HandleHostageRescuedEvent(e *events.HostageRescued
 }
 
 func (s *InMemoryCounterSink) HandleMatchEndEvent(e *events.MatchEnd) {
-	m := e.Server.CurrentMatch
+	m := e.Server.CurrentMatch()
 	s.Matches = append(s.Matches, m)
 }
 

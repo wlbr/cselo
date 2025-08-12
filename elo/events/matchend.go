@@ -45,23 +45,24 @@ func NewMatchEndEvent(b *elo.BaseEvent) (e *MatchEnd) {
 		if err != nil {
 			log.Error("Cannot read score of team B (got %s). %v", gom[5], err)
 		}
+		b.Server.CurrentMatch().Set(gom[1], gom[2], gom[3], mn, scorea, scoreb, true, b.Time, d)
 
-		b.Server.CurrentMatch.GameMode = gom[1]
-		b.Server.CurrentMatch.MapGroup = gom[2]
-		b.Server.CurrentMatch.MapFullName = gom[3]
-		b.Server.CurrentMatch.MapName = mn
-		b.Server.CurrentMatch.ScoreA = scorea
-		b.Server.CurrentMatch.ScoreB = scoreb
-		b.Server.CurrentMatch.Completed = true
+		// b.Server.CurrentMatch().GameMode = gom[1]
+		// b.Server.CurrentMatch().MapGroup = gom[2]
+		// b.Server.CurrentMatch().SetMapFullName(gom[3])
+		// b.Server.CurrentMatch().MapName = mn
+		// b.Server.CurrentMatch().ScoreA = scorea
+		// b.Server.CurrentMatch().ScoreB = scoreb
+		// b.Server.CurrentMatch().Completed = true
 
-		b.Server.CurrentMatch.End = b.Time
-		b.Server.CurrentMatch.Duration = d
+		// b.Server.CurrentMatch().End = b.Time
+		// b.Server.CurrentMatch().Duration = d
 
-		e = &MatchEnd{GameMode: b.Server.CurrentMatch.GameMode, MapGroup: b.Server.CurrentMatch.MapGroup,
-			MapFullName: b.Server.CurrentMatch.MapFullName, MapName: b.Server.CurrentMatch.MapName,
-			ScoreA: b.Server.CurrentMatch.ScoreA, ScoreB: b.Server.CurrentMatch.ScoreB,
-			MatchEnd: b.Server.CurrentMatch.End, Duration: b.Server.CurrentMatch.Duration,
-			Completed: b.Server.CurrentMatch.Completed,
+		e = &MatchEnd{GameMode: b.Server.CurrentMatch().GameMode, MapGroup: b.Server.CurrentMatch().MapGroup,
+			MapFullName: b.Server.CurrentMatch().MapFullName(), MapName: b.Server.CurrentMatch().MapName,
+			ScoreA: b.Server.CurrentMatch().ScoreA, ScoreB: b.Server.CurrentMatch().ScoreB,
+			MatchEnd: b.Server.CurrentMatch().End, Duration: b.Server.CurrentMatch().Duration,
+			Completed: b.Server.CurrentMatch().Completed,
 			BaseEvent: b}
 		log.Info("Created event: %#v", e)
 	}
