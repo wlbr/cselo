@@ -76,6 +76,10 @@ func GetPlayerByName(name string) (p *Player, e *PlayerLookupError) {
 func SteamIdToProfileId(steamId string) (profileid string) {
 	steamid := strings.Trim(steamId, "[]")
 	segments := strings.Split(steamid, ":")
+	if len(segments) != 3 {
+		log.Error("Invalid steamid format '%s'", steamid)
+		return ""
+	}
 	sid, err := strconv.Atoi(segments[2])
 	if err != nil {
 		log.Error("Cannot convert steamid '%s' error: %v", steamid, err)

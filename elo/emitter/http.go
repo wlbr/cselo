@@ -22,7 +22,6 @@ type httpEmitter struct {
 	filters  []elo.Filter
 	recorder *elo.Recorder
 	incoming *elo.IncomingBuffer
-	server   *elo.Server
 }
 
 func NewHttpEmitter(cfg *elo.Config) *httpEmitter {
@@ -72,14 +71,7 @@ func (em *httpEmitter) GetFilters() []elo.Filter {
 	return em.filters
 }
 
-func (em *httpEmitter) stopWorkers(server *elo.Server) {
-	for _, p := range em.procs {
-		p.AddJob(elo.NewBaseEvent(server, time.Now(), "cselo:StopProcessing."))
-	}
 
-	//wait for the processors to stop
-	em.WaitForProcessors()
-}
 
 // func (em *httpEmitter) pusher() {
 // 	em.wg.Add(1)
@@ -109,10 +101,10 @@ func (em *httpEmitter) stopWorkers(server *elo.Server) {
 func (em *httpEmitter) Loop() {
 	const protocol = "http"
 	port := em.config.Elo.Port
-	server := elo.NewServer("fromHttp")
-	em.server = server
-	defer em.stopWorkers(server)
-	handler := &csLogHandler{emitter: em, server: server}
+	//server := elo.NewServer("fromHttp")
+	//em.server = server
+	//defer em.stopWorkers(server)
+	handler := &csLogHandler{emitter: em}
 
 	s := &http.Server{
 		Addr:              ":" + port,
@@ -149,7 +141,6 @@ func (em *httpEmitter) Loop() {
 
 type csLogHandler struct {
 	emitter *httpEmitter
-	server  *elo.Server
 }
 
 // // request handler in net/http style, i.e. method bound to csLogHandler struct.
@@ -177,7 +168,7 @@ type csLogHandler struct {
 // 	fmt.Fprintf(ctx, "")
 // }
 
-func (h *csLogHandler) pushMessage(sbuf string) {
+func (h *csLogHandler) pushMessage(sbuf string, remoteAddr string) {
 	t, m, err := elo.ShortenMessage(sbuf)
 	if err != nil {
 		log.Warn("Ignoring line. %v", err)
@@ -185,7 +176,8 @@ func (h *csLogHandler) pushMessage(sbuf string) {
 	} else {
 		if !elo.CheckFilter(h.emitter, m) {
 			for _, p := range h.emitter.procs {
-				p.AddJob(elo.NewBaseEvent(h.server, t, m))
+				server := p.GetServer(remoteAddr)
+				p.AddJob(elo.NewBaseEvent(server, t, m))
 			}
 		}
 		if h.emitter.config.Elo.RecorderFileName != "" {
@@ -208,7 +200,7 @@ func (h *csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error("Problem reading request body: %v", err)
 		} else {
-			h.pushMessage(strings.Clone(string(buf)))
+			h.pushMessage(strings.Clone(string(buf)), r.RemoteAddr)
 		}
 
 	}

@@ -40,7 +40,6 @@ func (s *Server) CurrentMatch() *Match {
 		log.Error("CurrentMatch is nil for server %s", s.IP)
 		return nil
 	}
-	log.Debug("CurrentMatch for server %s: %+v", s.IP, s.currentMatch)
 	return s.currentMatch
 }
 

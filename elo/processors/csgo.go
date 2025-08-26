@@ -1,6 +1,8 @@
 package processors
 
 import (
+	"sync"
+
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
@@ -12,11 +14,12 @@ type CsgoLog struct {
 	config   *elo.Config
 	sinks    []sinks.Sink
 	servers  map[string]*elo.Server
+	m        *sync.Mutex
 }
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
-	//p.m = &sync.Mutex{}
+	p.m = &sync.Mutex{}
 	p.servers = make(map[string]*elo.Server)
 	p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
 	return p
@@ -25,6 +28,17 @@ func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 // func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
 // 	p.wg = wg
 // }
+
+func (p *CsgoLog) GetServer(ip string) *elo.Server {
+	p.m.Lock()
+	defer p.m.Unlock()
+	server := p.servers[ip]
+	if server == nil {
+		server = elo.NewServer(ip)
+		p.servers[ip] = server
+	}
+	return server
+}
 
 func (p *CsgoLog) AddSink(s sinks.Sink) {
 	log.Info("Adding sink to CsgoLog processor: %#v", s)
