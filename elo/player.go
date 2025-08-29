@@ -67,7 +67,7 @@ func GetPlayerByName(name string) (p *Player, e *PlayerLookupError) {
 
 	switch len(cands) {
 	case 0:
-		e = &PlayerLookupError{description: "Did not finy any player with name", name: name, candidates: cands}
+		e = &PlayerLookupError{description: "Did not find any player with name", name: name, candidates: cands}
 	case 1:
 		p = cands[0]
 	default:
