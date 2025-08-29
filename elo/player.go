@@ -45,8 +45,13 @@ func GetPlayer(name, id string) (p *Player) {
 		steamid = id
 	}
 
+	profileId := SteamIdToProfileId(steamid)
+	if profileId == "" {
+		log.Error("GetPlayer:Cannot determine ProfileId for player '%s' with id '%s'", name, id)
+		return nil
+	}
 	if p = players[steamid]; p == nil {
-		p = &Player{Name: name, SteamID: steamid, UserID: userid, ProfileID: SteamIdToProfileId(steamid)}
+		p = &Player{Name: name, SteamID: steamid, UserID: userid, ProfileID: profileId}
 		players[steamid] = p
 	}
 	return p

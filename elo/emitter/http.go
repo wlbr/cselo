@@ -71,8 +71,6 @@ func (em *httpEmitter) GetFilters() []elo.Filter {
 	return em.filters
 }
 
-
-
 // func (em *httpEmitter) pusher() {
 // 	em.wg.Add(1)
 // 	defer em.wg.Done()
@@ -174,14 +172,14 @@ func (h *csLogHandler) pushMessage(sbuf string, remoteAddr string) {
 		log.Warn("Ignoring line. %v", err)
 		return
 	} else {
+		if h.emitter.config.Elo.RecorderFileName != "" {
+			h.emitter.recorder.Record(strings.Clone(sbuf))
+		}
 		if !elo.CheckFilter(h.emitter, m) {
 			for _, p := range h.emitter.procs {
 				server := p.GetServer(remoteAddr)
 				p.AddJob(elo.NewBaseEvent(server, t, m))
 			}
-		}
-		if h.emitter.config.Elo.RecorderFileName != "" {
-			h.emitter.recorder.Record(sbuf)
 		}
 	}
 }
@@ -200,8 +198,8 @@ func (h *csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error("Problem reading request body: %v", err)
 		} else {
-			h.pushMessage(strings.Clone(string(buf)), r.RemoteAddr)
+			remoteAddr := strings.Split(r.RemoteAddr, ":")[0]
+			h.pushMessage(strings.Clone(string(buf)), remoteAddr)
 		}
-
 	}
 }

@@ -88,6 +88,10 @@ func (s *PostgresSink) GetOrStorePlayerbySteamID(p *elo.Player) *elo.Player {
 		if p.ProfileID == "" {
 			p.ProfileID = elo.SteamIdToProfileId(p.SteamID)
 		}
+		if p.ProfileID == "" {
+			log.Error("PostgresSink.GetOrStorePlayerbySteamID: Cannot determine ProfileID for player '%+v'", p)
+			return p
+		}
 		err := s.db.QueryRow(context.Background(), "INSERT INTO players  (initialname, steamid, profileid) VALUES ($1, $2, $3) RETURNING id", p.Name, p.SteamID, p.ProfileID).Scan(&id)
 		if err != nil {
 			log.Error("Cannot store player '%+v' in PostgresQL database: %v", p, err)

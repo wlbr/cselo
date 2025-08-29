@@ -29,7 +29,12 @@ type PlayerConnected struct {
 
 func NewPlayerConnectedEvent(b *elo.BaseEvent) (e *PlayerConnected) {
 	if sm := connectrex.FindStringSubmatch(b.Message); sm != nil {
-		e = &PlayerConnected{Subject: elo.GetPlayer(sm[1], sm[3]), Address: sm[5], BaseEvent: b}
+		player := elo.GetPlayer(sm[1], sm[3])
+		if player == nil {
+			log.Error("NewPlayerConnectedEvent:Cannot determine player for event message '%s': '%s'", b.Time, b.Message)
+			return nil
+		}
+		e = &PlayerConnected{Subject: player, Address: sm[5], BaseEvent: b}
 		log.Info("Created event: %+v", e)
 	}
 	return e
