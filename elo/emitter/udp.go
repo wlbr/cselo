@@ -50,7 +50,7 @@ func (em *udpEmitter) WaitForProcessors() {
 func (em *udpEmitter) AddProcessor(p elo.Processor) {
 	em.procs = append(em.procs, p)
 	//p.AddWaitGroup(em.wg)
-	go p.Loop()
+	//go p.Loop()
 }
 
 func (em *udpEmitter) GetProcessor() []elo.Processor {

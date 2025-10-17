@@ -10,19 +10,19 @@ import (
 )
 
 type CsgoLog struct {
-	incoming chan *elo.BaseEvent
-	config   *elo.Config
-	sinks    []sinks.Sink
-	servers  map[string]*elo.Server
-	m        *sync.RWMutex
-	wg       *sync.WaitGroup
+	//incoming chan *elo.BaseEvent
+	config  *elo.Config
+	sinks   []sinks.Sink
+	servers map[string]*elo.Server
+	m       *sync.RWMutex
+	wg      *sync.WaitGroup
 }
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
 	p.m = &sync.RWMutex{}
 	p.servers = make(map[string]*elo.Server)
-	p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
+	//p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
 	return p
 }
 
@@ -49,24 +49,25 @@ func (p *CsgoLog) AddSink(s sinks.Sink) {
 }
 
 func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
-	p.incoming <- b
+	//p.incoming <- b
+	p.process(b)
 }
 
-func (p *CsgoLog) Loop() {
-	p.wg.Add(1)
-	defer p.wg.Done()
-	for {
-		e := <-p.incoming
-		p.process(e)
-		if e.Message == "cselo:StopProcessing." {
-			break
-		}
-	}
-	defer log.Info("Finishing processor")
-}
+// func (p *CsgoLog) Loop() {
+// 	p.wg.Add(1)
+// 	defer p.wg.Done()
+// 	for {
+// 		e := <-p.incoming
+// 		p.process(e)
+// 		if e.Message == "cselo:StopProcessing." {
+// 			break
+// 		}
+// 	}
+// 	defer log.Info("Finishing processor")
+// }
 
 func (p *CsgoLog) process(b *elo.BaseEvent) {
-	log.Info("Processing event: %s")
+	log.Info("Processing event: %v", b)
 	if b.Server.CurrentMatch() == nil {
 		log.Info("No current match, creating a new one.")
 		match := elo.NewMatch("unknown", "unknown", b.Time, b.Server)
@@ -190,5 +191,4 @@ func (p *CsgoLog) process(b *elo.BaseEvent) {
 		}
 		return
 	}
-
 }

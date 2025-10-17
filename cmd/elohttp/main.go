@@ -33,9 +33,9 @@ func main() {
 	// 	processor.AddSink(s)
 	// }
 
-	discord := net.NewDisordSender(config.Elo.DiscordWebhook)
+	discord := net.NewDiscordSender(config.Elo.DiscordWebhook)
 	if config.Elo.ImportFileName != "" {
-		discord = net.NewDisordSender("") //inactive
+		discord = net.NewDiscordSender("") //inactive
 	}
 
 	if s, e := sinks.NewPostgresSink(config, discord); e == nil {

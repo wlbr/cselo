@@ -54,7 +54,7 @@ func NewRecorder(cfg *Config, waitgroup *sync.WaitGroup) *Recorder {
 func (r *Recorder) writeLine(line string) {
 	r.fm.Lock()
 	defer r.fm.Unlock()
-	log.Info("Recording: " + line)
+	log.Info("Recording: %s", line)
 	_, err := r.wbuf.WriteString(line)
 	r.wbuf.Flush()
 	if err != nil {
@@ -66,13 +66,11 @@ func (r *Recorder) writeLine(line string) {
 func (r *Recorder) Record(line string) {
 	if r.config.Elo.RecorderFileName != "" {
 		log.Info("Recorder getting job: %s", line)
-		//r.cm.Lock()
 		if len(line) > 0 && line[len(line)-1] != '\n' {
 			r.incoming <- line + "\n"
 		} else {
 			r.incoming <- line
 		}
-		//r.cm.Unlock()
 	}
 }
 

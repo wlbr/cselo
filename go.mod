@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/vektah/gqlparser/v2 v2.5.30
-	github.com/wlbr/commons v0.0.6
+	github.com/wlbr/commons v0.0.7
 )
 
 require (

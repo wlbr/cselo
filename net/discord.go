@@ -17,7 +17,7 @@ type DiscordSender struct {
 	webhook string
 }
 
-func NewDisordSender(webhook string) *DiscordSender {
+func NewDiscordSender(webhook string) *DiscordSender {
 	d := &DiscordSender{queue: make(chan string, 10000), webhook: webhook}
 	if webhook != "" {
 		go d.loop()

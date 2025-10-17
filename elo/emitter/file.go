@@ -48,7 +48,7 @@ func (em *fileEmitter) GetProcessor() []elo.Processor {
 func (em *fileEmitter) AddProcessor(p elo.Processor) {
 	em.procs = append(em.procs, p)
 	p.AddWaitGroup(em.wg)
-	go p.Loop()
+	//go p.Loop()
 }
 
 func (em *fileEmitter) AddFilter(f elo.Filter) {

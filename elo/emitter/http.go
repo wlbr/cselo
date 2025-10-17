@@ -50,7 +50,7 @@ func (em *httpEmitter) WaitForProcessors() {
 func (em *httpEmitter) AddProcessor(p elo.Processor) {
 	em.procs = append(em.procs, p)
 	p.AddWaitGroup(em.wg)
-	go p.Loop()
+	//go p.Loop()
 }
 
 func (em *httpEmitter) GetProcessor() []elo.Processor {
@@ -141,7 +141,7 @@ func (h *csLogHandler) pushMessage(remoteAddr, sbuf string) {
 	}
 	t, m, err := elo.ShortenMessage(sbuf)
 	if err != nil {
-		log.Warn("Ignoring line. %v", err)
+		log.Warn("Ignoring line. Error: %v.  Line: %s", err, sbuf)
 		return
 	} else {
 		if !elo.CheckFilter(h.emitter, m) {

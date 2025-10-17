@@ -5,6 +5,6 @@ import "sync"
 type Processor interface {
 	AddWaitGroup(wg *sync.WaitGroup)
 	AddJob(b *BaseEvent)
-	Loop()
+	//Loop()
 	GetServer(ip string) *Server
 }
