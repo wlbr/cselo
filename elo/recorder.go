@@ -9,8 +9,8 @@ import (
 )
 
 type Recorder struct {
-	config *Config
-	//cm, fm   *sync.Mutex
+	config   *Config
+	fm       sync.Mutex //cm
 	wg       *sync.WaitGroup
 	incoming chan string
 	filename string
@@ -20,7 +20,7 @@ type Recorder struct {
 
 func NewRecorder(cfg *Config, waitgroup *sync.WaitGroup) *Recorder {
 	//r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, cm: &sync.Mutex{}, fm: &sync.Mutex{}, incoming: make(chan string, cfg.Elo.BufferSize), wg: waitgroup}
-	r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, incoming: make(chan string), wg: waitgroup}
+	r := &Recorder{config: cfg, filename: cfg.Elo.RecorderFileName, incoming: make(chan string, cfg.Elo.BufferSize), wg: waitgroup}
 
 	if cfg.Elo.RecorderFileName != "" {
 		log.Info("Creating new Recorder with filename '%s'", r.filename)
@@ -52,7 +52,8 @@ func NewRecorder(cfg *Config, waitgroup *sync.WaitGroup) *Recorder {
 }
 
 func (r *Recorder) writeLine(line string) {
-	//r.fm.Lock()
+	r.fm.Lock()
+	defer r.fm.Unlock()
 	log.Info("Recording: " + line)
 	_, err := r.wbuf.WriteString(line)
 	r.wbuf.Flush()
@@ -60,7 +61,6 @@ func (r *Recorder) writeLine(line string) {
 		log.Fatal("Could not write line to recorder file '%s': %s", r.filename, err)
 		r.config.FatalExit()
 	}
-	//r.fm.Unlock()
 }
 
 func (r *Recorder) Record(line string) {

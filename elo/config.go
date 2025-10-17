@@ -120,7 +120,7 @@ func (cfg *Config) Initialize(version string, buildtimestamp string) *Config {
 	// Outputfile
 	cfg.Elo.OutputFileName = flag.Arg(0)
 	if cfg.Elo.OutputFileName == "" || strings.ToUpper(cfg.Elo.OutputFileName) == "STDOUT" {
-		log.Warn("No output file file given as argument. Using <STDOUT>.")
+		log.Info("No output file file given as argument. Using <STDOUT>.")
 		cfg.Elo.OutputFileName = "<STDOUT>"
 		cfg.Elo.OutputFile = os.Stdout
 	} else {

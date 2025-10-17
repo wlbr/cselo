@@ -28,29 +28,6 @@ type Emitter interface {
 // L 08/26/2021 - 18:00:55: "Dackel<21><STEAM_1:0:1770206><>" connected, address ""
 // L 04/14/2022 - 18:27:16: "DorianHunter<39><STEAM_1:1:192746><>" connected, address ""
 
-// func shortenMessage(str string) (timestamp time.Time, message string, err error) {
-// 	strings.TrimLeft(str, " L")
-// 	start := 0
-// 	dend := start + 25
-// 	if len(str) < dend || str[dend] != ' ' {
-// 		return timestamp, message, fmt.Errorf("Logline not in standard format, did not find end of date. Logline: '%s'", str)
-// 	}
-// 	if err == nil {
-// 		layout := "01/02/2006 - 15:04:05.000"
-// 		timestamp, err = time.Parse(layout, str[start:dend])
-// 		if err != nil {
-// 			log.Error("Could not parse event time, using <now>: %s", str[start:dend])
-// 			timestamp = time.Now()
-// 			err = nil
-// 		}
-// 		message = str[dend+3:]
-// 	}
-
-// 	return timestamp, message, err
-// }
-
-// var shortenrex = regexp.MustCompile(`(?Um)L |(.+) - (.+)(:| -) (.*)$`)
-// var shortenrex = regexp.MustCompile(`(L )?(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)$`)
 var shortenrex = regexp.MustCompile(`"?(.+) - (\d\d:\d\d:(\d|\.)+)(:| -) (.*)"?$`)
 
 func ShortenMessage(str string) (timestamp time.Time, message string, err error) {

@@ -25,7 +25,8 @@ func main() {
 	config = new(elo.Config)
 	config.Initialize(Version, BuildTimestamp)
 	defer config.CleanUp()
-	log.Warn("Starting up")
+
+	log.Print("Starting up.  Version: %s.   Timestamp: %s    Working directory:%s ", config.GitVersion, config.BuildTimeStamp, config.WorkingDirectory)
 
 	processor := processors.NewCsgoLogProcessor(config)
 	// if s, e := sinks.NewInfluxSink(config); e == nil {
@@ -50,6 +51,7 @@ func main() {
 	} else {
 		emi = emitter.NewHttpEmitter(config)
 	}
+
 	emi.AddFilter(&elo.AllBotsFilter{})
 	emi.AddFilter(&elo.UnknownFilter{})
 	emi.AddFilter(&elo.SteamIdPendingFilter{})

@@ -41,7 +41,7 @@ coverage: test
 	@echo Running coverage job...
 	go tool cover -html=coverage.txt
 
-deploy:
+deploy: build
 	ssh elo mkdir -p '~/bin'
 	ssh vm sudo systemctl stop cselohttp.service
 	rsync -v --progress bin/linux/arm/* elo:~/bin

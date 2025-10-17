@@ -14,28 +14,31 @@ type CsgoLog struct {
 	config   *elo.Config
 	sinks    []sinks.Sink
 	servers  map[string]*elo.Server
-	m        *sync.Mutex
+	m        *sync.RWMutex
+	wg       *sync.WaitGroup
 }
 
 func NewCsgoLogProcessor(cfg *elo.Config) *CsgoLog {
 	p := &CsgoLog{config: cfg}
-	p.m = &sync.Mutex{}
+	p.m = &sync.RWMutex{}
 	p.servers = make(map[string]*elo.Server)
 	p.incoming = make(chan *elo.BaseEvent) //, cfg.Elo.BufferSize)
 	return p
 }
 
-// func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
-// 	p.wg = wg
-// }
+func (p *CsgoLog) AddWaitGroup(wg *sync.WaitGroup) {
+	p.wg = wg
+}
 
 func (p *CsgoLog) GetServer(ip string) *elo.Server {
-	p.m.Lock()
-	defer p.m.Unlock()
+	p.m.RLock()
 	server := p.servers[ip]
+	p.m.RUnlock()
 	if server == nil {
+		p.m.Lock()
 		server = elo.NewServer(ip)
 		p.servers[ip] = server
+		defer p.m.Unlock()
 	}
 	return server
 }
@@ -50,8 +53,8 @@ func (p *CsgoLog) AddJob(b *elo.BaseEvent) {
 }
 
 func (p *CsgoLog) Loop() {
-	// p.wg.Add(1)
-	// defer p.wg.Done()
+	p.wg.Add(1)
+	defer p.wg.Done()
 	for {
 		e := <-p.incoming
 		p.process(e)
@@ -62,9 +65,8 @@ func (p *CsgoLog) Loop() {
 	defer log.Info("Finishing processor")
 }
 
-// func (p *CsgoLog) Dispatch(em elo.Emitter, b.Server *elo.Server, t time.Time, m string) {
 func (p *CsgoLog) process(b *elo.BaseEvent) {
-	log.Info("Processing event: %s - %v", b.Message, b.Server.CurrentMatch())
+	log.Info("Processing event: %s")
 	if b.Server.CurrentMatch() == nil {
 		log.Info("No current match, creating a new one.")
 		match := elo.NewMatch("unknown", "unknown", b.Time, b.Server)
