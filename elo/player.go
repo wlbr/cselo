@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/wlbr/commons/log"
 )
@@ -24,6 +25,7 @@ func (p *Player) String() string {
 type PlayersCache map[int]*Player
 
 var players = make(map[string]*Player)
+var playerMutex = &sync.RWMutex{}
 
 type PlayerLookupError struct {
 	description string
@@ -50,20 +52,27 @@ func GetPlayer(name, id string) (p *Player) {
 		log.Error("GetPlayer:Cannot determine ProfileId for player '%s' with id '%s'", name, id)
 		return nil
 	}
-	if p = players[steamid]; p == nil {
+	playerMutex.RLock()
+	p = players[steamid]
+	playerMutex.RUnlock()
+	if p == nil {
+		playerMutex.Lock()
 		p = &Player{Name: name, SteamID: steamid, UserID: userid, ProfileID: profileId}
 		players[steamid] = p
+		playerMutex.Unlock()
 	}
 	return p
 }
 
 func GetPlayerByName(name string) (p *Player, e *PlayerLookupError) {
 	var cands []*Player
+	playerMutex.RLock()
 	for _, pl := range players {
 		if pl.Name == name {
 			cands = append(cands, pl)
 		}
 	}
+	playerMutex.RUnlock()
 
 	switch len(cands) {
 	case 0:

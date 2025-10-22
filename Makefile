@@ -33,7 +33,7 @@ run: #generate
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
 
 test: recreatetables
-	go run -ldflags "$(LINKERFLAGS)" cmd/eloudp/main.go -cfg cselo-local.ini -import data/test.log
+	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini -import data/test.log
 	@echo Running test job...
 	go test ./... -cover -coverprofile=coverage.txt -cfg $(PROJECTROOT)cselo-local.ini -import $(PROJECTROOT)data/test.log -loglevel Error -player Jagger
 

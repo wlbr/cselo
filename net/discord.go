@@ -79,5 +79,7 @@ func (d *DiscordSender) pushMessageToDiscord(message string) (timeout int) {
 }
 
 func (d *DiscordSender) Send(message string) {
-	d.queue <- message
+	if d.webhook != "" {
+		d.queue <- message
+	}
 }
