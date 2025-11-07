@@ -15,7 +15,6 @@ func TestMatchEndsByDB(t *testing.T) {
 		panic(err.Error())
 	}
 
-	//if matchescount != dbmatchescount { // can't be equal, because we cannot correctly count started, but not finished maps using grep only
 	if matchescount != dbmatchescount {
 		t.Errorf("%s failed: filecount %d != dbcount %d", t.Name(), matchescount, dbmatchescount)
 	}

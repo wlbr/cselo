@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alitto/pond"
@@ -29,7 +30,7 @@ func sendLine(line string) {
 	log.Info("Posting '%s' to %s", line, posturl)
 	r, err := http.NewRequest("POST", posturl, bytes.NewBufferString(line))
 	if err != nil {
-		log.Error("Problem creqating request for logline '%s':  %s", line, err)
+		log.Error("Problem creating request for logline '%s':  %s", line, err)
 		return
 	}
 	client := &http.Client{
@@ -73,7 +74,7 @@ func ClientLoop(filename string, sendInParallel bool, pool *pond.WorkerPool) {
 
 	for scanner.Scan() {
 		lineno++
-		buf := scanner.Text()
+		buf := strings.Clone(scanner.Text())
 		if sendInParallel {
 			pool.Submit(func() { sendLine(buf) })
 		} else {
@@ -102,21 +103,9 @@ func main() {
 	if sendInParallel {
 		pool.StopAndWait()
 	}
-	// for {
-	// 	waitingtasks := pool.WaitingTasks()
-	// 	activeworkers := pool.RunningWorkers()
-	// 	idleworkers := pool.IdleWorkers()
-	// 	fmt.Printf("%d - %d- %d\n ", activeworkers, idleworkers, waitingtasks)
 
-	// 	if activeworkers-idleworkers == 0 && waitingtasks == 0 {
-	// 		break
-	// 	} else {
-	// 		time.Sleep(500 * time.Millisecond)
-	// 	}
-
-	// }
 	end := time.Now()
 	elapsed := end.Sub(start)
 	log.Warn("Shutting down, been up for %s\n", elapsed)
-	//}
+
 }

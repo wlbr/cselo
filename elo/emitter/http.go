@@ -1,7 +1,7 @@
 package emitter
 
 import (
-	"io"
+	"bufio"
 	"net/http"
 	"os"
 	"strings"
@@ -154,21 +154,23 @@ func (h *csLogHandler) pushMessage(remoteAddr, sbuf string) {
 }
 
 func (h *csLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var buf []byte
 	var err error
 
-	//log.Error("Got request: %s  Emitter: %p-%v  Server: %p-%v  Match: %v", r.URL, h.emitter, h.emitter, h.server, h.server, h.server.CurrentMatch)
 	if r.Body == nil {
 		log.Info("Empty request body. Url: %s", r.URL)
 	} else {
-		buf, err = io.ReadAll(r.Body)
+		scanner := bufio.NewScanner(r.Body)
 		defer r.Body.Close()
 		if err != nil {
 			log.Error("Problem reading request body: %v", err)
 		} else {
 			//remoteAddr := strings.Split(r.RemoteAddr, ":")[0]. // would be IPv4 address without port. Will not work with IPv6
 			remoteAddr := "fromHttp" // should be IP of server=request IP. Unsolved problems with changing routes IPv4/IPv6, therefore only common sender
-			h.receive(remoteAddr, string(buf))
+			for scanner.Scan() {
+				line := scanner.Text()
+				h.receive(remoteAddr, line)
+				h.emitter.config.Logger.Debug("handler: %p --- %s", h, line)
+			}
 		}
 		w.WriteHeader(http.StatusOK)
 	}

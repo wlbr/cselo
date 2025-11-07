@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/events"
@@ -15,7 +14,7 @@ import (
 
 type PostgresSink struct {
 	config  *elo.Config
-	db      *pgxpool.Pool
+	db      *pgx.Conn
 	discord *net.DiscordSender
 }
 
@@ -49,14 +48,13 @@ func NewPostgresSink(cfg *elo.Config, discord *net.DiscordSender) (*PostgresSink
 		err = fmt.Errorf("No PostgresQL database name given")
 	}
 	if err == nil {
-		s.db, err = pgxpool.New(context.Background(), dbinfo)
+		s.db, err = pgx.Connect(context.Background(), dbinfo)
 		if err != nil {
 			log.Error("Cannot open PostgresQL database: %v", err)
 		}
 		cfg.AddCleanUpFn(func() error {
 			log.Info("Cleanup - closing PostgreSQL database connection")
-			s.db.Close()
-			return nil
+			return s.db.Close(context.Background())
 		})
 		log.Info("Established PostgreSQL database connection")
 	} else {
