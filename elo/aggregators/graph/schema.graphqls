@@ -69,7 +69,7 @@ type Match {
 }
 
 type Query {
-  players(limit: Int! = 50, offset: Int! = 0): [Player!]!
+  players(name: String, limit: Int! = 50, offset: Int! = 0): [Player!]!
   player(id: ID!): Player
   matches(limit: Int! = 50, offset: Int! = 0): [Match!]!
   match(id: ID!): Match

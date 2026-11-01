@@ -19,9 +19,9 @@ func (s *Postgres) GetFlashStatsForPlayer(p *elo.Player, iv *elo.Intervall) *elo
 		row := s.Db.QueryRow(context.Background(), "select count(case when victimtype='enemy' then 1 end) as enemyflashes, "+
 			"count(case when victimtype='teammate' then 1 end) as teammateflash, "+
 			"count(case when victimtype='self' then 1 end) as selfflash "+
-			"from blindings "+
+			"from blindings join matches on matches.id=blindings.match "+
 			//"WHERE timestmp > current_date - make_interval(days => $1) AND actor = $2 ;", 700, fp.ID)
-			"WHERE timestmp > $1 and timestmp < $2 AND actor = $3 ;", iv.Start, iv.End, fp.ID)
+			"WHERE matches.completed AND timestmp > $1 and timestmp < $2 AND actor = $3 ;", iv.Start, iv.End, fp.ID)
 		err := row.Scan(&eflash, &tflash, &sflash)
 		if err != nil {
 			log.Error("Cannot get player flash from PostgresQL database: %v", err)

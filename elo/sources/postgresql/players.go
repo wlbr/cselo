@@ -69,15 +69,32 @@ func (s *Postgres) GetAllPlayers() elo.PlayersCache {
 }
 
 func (s *Postgres) GetPlayers(ctx context.Context, limit, offset int) ([]*elo.Player, error) {
-	if err := validatePage(limit, offset); err != nil {
-		return nil, err
-	}
-
-	rows, err := s.Db.Query(ctx, `
+	return s.queryPlayers(ctx, `
 SELECT id, initialname, steamid, COALESCE(profileid, '')
 FROM players
 ORDER BY initialname, id
-LIMIT $1 OFFSET $2`, limit, offset)
+LIMIT $1 OFFSET $2`, nil, limit, offset)
+}
+
+func (s *Postgres) SearchPlayers(ctx context.Context, name string, limit, offset int) ([]*elo.Player, error) {
+	if name == "" {
+		return nil, fmt.Errorf("player name must not be empty")
+	}
+	return s.queryPlayers(ctx, `
+SELECT id, initialname, steamid, COALESCE(profileid, '')
+FROM players
+WHERE initialname ILIKE '%' || $1 || '%'
+ORDER BY initialname, id
+LIMIT $2 OFFSET $3`, []interface{}{name}, limit, offset)
+}
+
+func (s *Postgres) queryPlayers(ctx context.Context, query string, arguments []interface{}, limit, offset int) ([]*elo.Player, error) {
+	if err := validatePage(limit, offset); err != nil {
+		return nil, err
+	}
+	arguments = append(arguments, limit, offset)
+
+	rows, err := s.Db.Query(ctx, query, arguments...)
 	if err != nil {
 		return nil, fmt.Errorf("get players: %w", err)
 	}

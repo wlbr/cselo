@@ -9,23 +9,26 @@ import (
 )
 
 const playerStatsQuery = `
-WITH participation AS (
-	SELECT match FROM kills WHERE actor = $1 OR victim = $1
+WITH completed_matches AS (
+	SELECT id FROM matches WHERE completed
+),
+participation AS (
+	SELECT k.match FROM kills k JOIN completed_matches m ON m.id = k.match WHERE k.actor = $1 OR k.victim = $1
 	UNION
-	SELECT match FROM assists WHERE actor = $1 OR victim = $1
+	SELECT a.match FROM assists a JOIN completed_matches m ON m.id = a.match WHERE a.actor = $1 OR a.victim = $1
 	UNION
-	SELECT match FROM blindings WHERE actor = $1 OR victim = $1
+	SELECT b.match FROM blindings b JOIN completed_matches m ON m.id = b.match WHERE b.actor = $1 OR b.victim = $1
 	UNION
-	SELECT match FROM grenadethrows WHERE actor = $1
+	SELECT g.match FROM grenadethrows g JOIN completed_matches m ON m.id = g.match WHERE g.actor = $1
 	UNION
-	SELECT match FROM scoreaction WHERE actor = $1
+	SELECT s.match FROM scoreaction s JOIN completed_matches m ON m.id = s.match WHERE s.actor = $1
 )
 SELECT
 	(SELECT COUNT(*) FROM participation),
-	(SELECT COUNT(*) FROM kills WHERE actor = $1),
-	(SELECT COUNT(*) FROM kills WHERE victim = $1),
-	(SELECT COUNT(*) FROM assists WHERE actor = $1),
-	(SELECT COUNT(*) FROM kills WHERE actor = $1 AND headshot)
+	(SELECT COUNT(*) FROM kills k JOIN completed_matches m ON m.id = k.match WHERE k.actor = $1),
+	(SELECT COUNT(*) FROM kills k JOIN completed_matches m ON m.id = k.match WHERE k.victim = $1),
+	(SELECT COUNT(*) FROM assists a JOIN completed_matches m ON m.id = a.match WHERE a.actor = $1),
+	(SELECT COUNT(*) FROM kills k JOIN completed_matches m ON m.id = k.match WHERE k.actor = $1 AND k.headshot)
 `
 
 func (s *Postgres) GetPlayerStats(ctx context.Context, playerID int64) (*elo.PlayerStats, error) {
@@ -40,22 +43,25 @@ func (s *Postgres) GetPlayerStats(ctx context.Context, playerID int64) (*elo.Pla
 
 func (s *Postgres) GetMatchParticipants(ctx context.Context, matchID int64) ([]*elo.MatchParticipant, error) {
 	rows, err := s.Db.Query(ctx, `
-WITH participants AS (
-	SELECT actor AS player_id FROM kills WHERE match = $1
-	UNION SELECT victim FROM kills WHERE match = $1
-	UNION SELECT actor FROM assists WHERE match = $1
-	UNION SELECT victim FROM assists WHERE match = $1
-	UNION SELECT actor FROM blindings WHERE match = $1
-	UNION SELECT victim FROM blindings WHERE match = $1
-	UNION SELECT actor FROM grenadethrows WHERE match = $1
-	UNION SELECT actor FROM scoreaction WHERE match = $1
+WITH completed_match AS (
+	SELECT id FROM matches WHERE id = $1 AND completed
+),
+participants AS (
+	SELECT k.actor AS player_id FROM kills k JOIN completed_match m ON m.id = k.match
+	UNION SELECT k.victim FROM kills k JOIN completed_match m ON m.id = k.match
+	UNION SELECT a.actor FROM assists a JOIN completed_match m ON m.id = a.match
+	UNION SELECT a.victim FROM assists a JOIN completed_match m ON m.id = a.match
+	UNION SELECT b.actor FROM blindings b JOIN completed_match m ON m.id = b.match
+	UNION SELECT b.victim FROM blindings b JOIN completed_match m ON m.id = b.match
+	UNION SELECT g.actor FROM grenadethrows g JOIN completed_match m ON m.id = g.match
+	UNION SELECT s.actor FROM scoreaction s JOIN completed_match m ON m.id = s.match
 )
 SELECT
 	p.id, p.initialname, p.steamid, COALESCE(p.profileid, ''),
-	(SELECT COUNT(*) FROM kills WHERE match = $1 AND actor = p.id),
-	(SELECT COUNT(*) FROM kills WHERE match = $1 AND victim = p.id),
-	(SELECT COUNT(*) FROM assists WHERE match = $1 AND actor = p.id),
-	(SELECT COUNT(*) FROM kills WHERE match = $1 AND actor = p.id AND headshot)
+	(SELECT COUNT(*) FROM kills k JOIN completed_match m ON m.id = k.match WHERE k.actor = p.id),
+	(SELECT COUNT(*) FROM kills k JOIN completed_match m ON m.id = k.match WHERE k.victim = p.id),
+	(SELECT COUNT(*) FROM assists a JOIN completed_match m ON m.id = a.match WHERE a.actor = p.id),
+	(SELECT COUNT(*) FROM kills k JOIN completed_match m ON m.id = k.match WHERE k.actor = p.id AND k.headshot)
 FROM participants
 JOIN players p ON p.id = participants.player_id
 ORDER BY p.initialname`, matchID)

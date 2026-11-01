@@ -37,3 +37,30 @@ type MatchParticipant struct {
 	Player *Player
 	Stats  *PlayerStats
 }
+
+type PlayerResult struct {
+	Player *Player
+	Stats  *PlayerStats
+}
+
+type HeadToHeadStats struct {
+	FirstKills      int
+	FirstHeadshots  int
+	SecondKills     int
+	SecondHeadshots int
+}
+
+type WeaponStats struct {
+	Weapon    string
+	Kills     int
+	Headshots int
+}
+
+type MapStats struct {
+	MapName   string
+	Matches   int
+	Kills     int
+	Deaths    int
+	Assists   int
+	Headshots int
+}

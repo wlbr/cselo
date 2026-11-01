@@ -37,7 +37,10 @@ func (r *playerResolver) Stats(ctx context.Context, obj *elo.Player) (*elo.Playe
 }
 
 // Players is the resolver for the players field.
-func (r *queryResolver) Players(ctx context.Context, limit int, offset int) ([]*elo.Player, error) {
+func (r *queryResolver) Players(ctx context.Context, name *string, limit int, offset int) ([]*elo.Player, error) {
+	if name != nil {
+		return r.Source.SearchPlayers(ctx, *name, limit, offset)
+	}
 	return r.Source.GetPlayers(ctx, limit, offset)
 }
 

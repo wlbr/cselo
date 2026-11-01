@@ -98,7 +98,7 @@ type ComplexityRoot struct {
 		Match   func(childComplexity int, id string) int
 		Matches func(childComplexity int, limit int, offset int) int
 		Player  func(childComplexity int, id string) int
-		Players func(childComplexity int, limit int, offset int) int
+		Players func(childComplexity int, name *string, limit int, offset int) int
 	}
 }
 
@@ -113,7 +113,7 @@ type PlayerResolver interface {
 	Stats(ctx context.Context, obj *elo.Player) (*elo.PlayerStats, error)
 }
 type QueryResolver interface {
-	Players(ctx context.Context, limit int, offset int) ([]*elo.Player, error)
+	Players(ctx context.Context, name *string, limit int, offset int) ([]*elo.Player, error)
 	Player(ctx context.Context, id string) (*elo.Player, error)
 	Matches(ctx context.Context, limit int, offset int) ([]*elo.Match, error)
 	Match(ctx context.Context, id string) (*elo.Match, error)
@@ -366,7 +366,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Players(childComplexity, args["limit"].(int), args["offset"].(int)), true
+		return e.complexity.Query.Players(childComplexity, args["name"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	}
 	return 0, false
@@ -528,7 +528,7 @@ type Match {
 }
 
 type Query {
-  players(limit: Int! = 50, offset: Int! = 0): [Player!]!
+  players(name: String, limit: Int! = 50, offset: Int! = 0): [Player!]!
   player(id: ID!): Player
   matches(limit: Int! = 50, offset: Int! = 0): [Match!]!
   match(id: ID!): Match
@@ -593,16 +593,21 @@ func (ec *executionContext) field_Query_player_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_players_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalNInt2int)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
-	args["limit"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "offset", ec.unmarshalNInt2int)
+	args["name"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalNInt2int)
 	if err != nil {
 		return nil, err
 	}
-	args["offset"] = arg1
+	args["limit"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "offset", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 
@@ -1590,7 +1595,7 @@ func (ec *executionContext) _Query_players(ctx context.Context, field graphql.Co
 		ec.fieldContext_Query_players,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().Players(ctx, fc.Args["limit"].(int), fc.Args["offset"].(int))
+			return ec.resolvers.Query().Players(ctx, fc.Args["name"].(*string), fc.Args["limit"].(int), fc.Args["offset"].(int))
 		},
 		nil,
 		ec.marshalNPlayer2ᚕᚖgithubᚗcomᚋwlbrᚋcseloᚋeloᚐPlayerᚄ,

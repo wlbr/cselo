@@ -15,14 +15,38 @@ COALESCE(mapname, ''), scorea, scoreb, rounds, matchstart, COALESCE(matchend, ma
 COALESCE(EXTRACT(EPOCH FROM duration)::bigint, 0), completed`
 
 func (s *Postgres) GetMatches(ctx context.Context, limit, offset int) ([]*elo.Match, error) {
-	if err := validatePage(limit, offset); err != nil {
-		return nil, err
-	}
-	rows, err := s.Db.Query(ctx, `
+	return s.getMatches(ctx, `
 SELECT `+matchColumns+`
 FROM matches
 ORDER BY matchstart DESC, id DESC
 LIMIT $1 OFFSET $2`, limit, offset)
+}
+
+func (s *Postgres) GetMatchesForPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*elo.Match, error) {
+	return s.getMatches(ctx, `
+SELECT `+matchColumns+`
+FROM matches
+WHERE matchstart >= $1 AND matchstart < $2
+ORDER BY matchstart DESC, id DESC
+LIMIT $3 OFFSET $4`, start, end, limit, offset)
+}
+
+func (s *Postgres) getMatches(ctx context.Context, query string, arguments ...interface{}) ([]*elo.Match, error) {
+	if len(arguments) < 2 {
+		return nil, fmt.Errorf("match query requires pagination arguments")
+	}
+	limit, ok := arguments[len(arguments)-2].(int)
+	if !ok {
+		return nil, fmt.Errorf("match query limit is invalid")
+	}
+	offset, ok := arguments[len(arguments)-1].(int)
+	if !ok {
+		return nil, fmt.Errorf("match query offset is invalid")
+	}
+	if err := validatePage(limit, offset); err != nil {
+		return nil, err
+	}
+	rows, err := s.Db.Query(ctx, query, arguments...)
 	if err != nil {
 		return nil, fmt.Errorf("get matches: %w", err)
 	}

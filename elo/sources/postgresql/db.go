@@ -7,12 +7,12 @@ import (
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type Postgres struct {
 	config       *elo.Config
-	Db           *pgx.Conn
+	Db           *pgxpool.Pool
 	PlayersCache elo.PlayersCache
 }
 
@@ -46,15 +46,17 @@ func NewPostgres(cfg *elo.Config) (*Postgres, error) {
 		err = fmt.Errorf("No PostgresQL database name given")
 	}
 	if err == nil {
-		s.Db, err = pgx.Connect(context.Background(), dbinfo)
+		s.Db, err = pgxpool.Connect(context.Background(), dbinfo)
 		if err != nil {
 			log.Error("Cannot open PostgresQL database: %v", err)
+			return nil, err
 		}
 		cfg.AddCleanUpFn(func() error {
-			log.Info("Cleanup - closing PostgreSQL database connection")
-			return s.Db.Close(context.Background())
+			log.Info("Cleanup - closing PostgreSQL connection pool")
+			s.Db.Close()
+			return nil
 		})
-		log.Info("Established PostgreSQL database connection")
+		log.Info("Established PostgreSQL connection pool")
 	} else {
 		log.Warn("Not creating PostgreSQL source due to missing connection data")
 		return nil, fmt.Errorf("Insufficient PostgreSQL connection data (%s)", err)
