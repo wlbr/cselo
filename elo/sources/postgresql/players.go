@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/wlbr/commons/log"
@@ -12,7 +13,7 @@ func (s *Postgres) GetPlayerByID(id int64) *elo.Player {
 	log.Info("Getting PLAYER by id from PostgreSQL database. id='%v'", id)
 
 	p := &elo.Player{}
-	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE id=$1`,
+	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, COALESCE(profileid, '') FROM players WHERE id=$1`,
 		id)
 	err := row.Scan(&p.ID, &p.Name, &p.SteamID, &p.ProfileID)
 	switch {
@@ -28,7 +29,7 @@ func (s *Postgres) GetPlayerBySteamID(steamid string) *elo.Player {
 	log.Info("Getting PLAYER by steamid from PostgreSQL database. steamid='%v'", steamid)
 
 	p := &elo.Player{}
-	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, profileid FROM players WHERE steamid=$1`,
+	row := s.Db.QueryRow(context.Background(), `SELECT id, initialname, steamid, COALESCE(profileid, '') FROM players WHERE steamid=$1`,
 		steamid)
 	err := row.Scan(&p.ID, &p.Name, &p.SteamID, &p.ProfileID)
 	switch {
@@ -43,7 +44,7 @@ func (s *Postgres) GetPlayerBySteamID(steamid string) *elo.Player {
 func (s *Postgres) GetAllPlayers() elo.PlayersCache {
 	log.Info("Getting all players.")
 
-	rows, err := s.Db.Query(context.Background(), "SELECT id, initialname, steamid, profileid FROM players;")
+	rows, err := s.Db.Query(context.Background(), "SELECT id, initialname, steamid, COALESCE(profileid, '') FROM players;")
 	defer rows.Close()
 	if err != nil {
 		log.Error("Cannot read all players from PostgresQL database: %v", err)
@@ -65,4 +66,33 @@ func (s *Postgres) GetAllPlayers() elo.PlayersCache {
 	}
 
 	return s.PlayersCache
+}
+
+func (s *Postgres) GetPlayers(ctx context.Context, limit, offset int) ([]*elo.Player, error) {
+	if err := validatePage(limit, offset); err != nil {
+		return nil, err
+	}
+
+	rows, err := s.Db.Query(ctx, `
+SELECT id, initialname, steamid, COALESCE(profileid, '')
+FROM players
+ORDER BY initialname, id
+LIMIT $1 OFFSET $2`, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("get players: %w", err)
+	}
+	defer rows.Close()
+
+	var players []*elo.Player
+	for rows.Next() {
+		player := &elo.Player{}
+		if err := rows.Scan(&player.ID, &player.Name, &player.SteamID, &player.ProfileID); err != nil {
+			return nil, fmt.Errorf("scan player: %w", err)
+		}
+		players = append(players, player)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate players: %w", err)
+	}
+	return players, nil
 }

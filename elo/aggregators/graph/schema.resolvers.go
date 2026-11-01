@@ -8,53 +8,71 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
-	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/aggregators/graph/generated"
 )
 
 // Server is the resolver for the server field.
-func (r *matchResolver) Server(ctx context.Context, obj *elo.Match) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *matchResolver) Server(ctx context.Context, obj *elo.Match) (*string, error) {
+	if obj.Server == nil {
+		return nil, nil
+	}
+	return &obj.Server.IP, nil
 }
 
-// Duration is the resolver for the duration field.
-func (r *matchResolver) Duration(ctx context.Context, obj *elo.Match) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
+// DurationSeconds is the resolver for the durationSeconds field.
+func (r *matchResolver) DurationSeconds(ctx context.Context, obj *elo.Match) (int, error) {
+	return int(obj.Duration.Seconds()), nil
+}
+
+// Participants is the resolver for the participants field.
+func (r *matchResolver) Participants(ctx context.Context, obj *elo.Match) ([]*elo.MatchParticipant, error) {
+	return r.Source.GetMatchParticipants(ctx, obj.ID())
+}
+
+// Stats is the resolver for the stats field.
+func (r *playerResolver) Stats(ctx context.Context, obj *elo.Player) (*elo.PlayerStats, error) {
+	return r.Source.GetPlayerStats(ctx, obj.ID)
 }
 
 // Players is the resolver for the players field.
-func (r *queryResolver) Players(ctx context.Context) ([]*elo.Player, error) {
-	c := r.Source.GetAllPlayers()
-	var players []*elo.Player
-	for _, p := range c {
-		players = append(players, p)
-	}
-	return players, nil
+func (r *queryResolver) Players(ctx context.Context, limit int, offset int) ([]*elo.Player, error) {
+	return r.Source.GetPlayers(ctx, limit, offset)
 }
 
 // Player is the resolver for the player field.
 func (r *queryResolver) Player(ctx context.Context, id string) (*elo.Player, error) {
 	intid, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		log.Error("Cannot convert ID %v to int: %s", id, err)
+	if err != nil || intid < 1 {
+		return nil, fmt.Errorf("player id must be a positive integer")
 	}
-	p := r.Source.GetPlayerByID(intid)
-	return p, nil
+	return r.Source.FindPlayerByID(ctx, intid)
 }
 
 // Matches is the resolver for the matches field.
-func (r *queryResolver) Matches(ctx context.Context) ([]*elo.Match, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Matches(ctx context.Context, limit int, offset int) ([]*elo.Match, error) {
+	return r.Source.GetMatches(ctx, limit, offset)
+}
+
+// Match is the resolver for the match field.
+func (r *queryResolver) Match(ctx context.Context, id string) (*elo.Match, error) {
+	intid, err := strconv.ParseInt(id, 10, 64)
+	if err != nil || intid < 1 {
+		return nil, fmt.Errorf("match id must be a positive integer")
+	}
+	return r.Source.GetMatchByID(ctx, intid)
 }
 
 // Match returns generated.MatchResolver implementation.
 func (r *Resolver) Match() generated.MatchResolver { return &matchResolver{r} }
 
+// Player returns generated.PlayerResolver implementation.
+func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type matchResolver struct{ *Resolver }
+type playerResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

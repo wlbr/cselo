@@ -32,11 +32,28 @@ type Player {
   name:      String!
   steamid:   String!
   profileid: String!
+  stats:     PlayerStats!
 }
 
-type Match  {
+type PlayerStats {
+  matches:          Int!
+  kills:            Int!
+  deaths:           Int!
+  assists:          Int!
+  headshots:        Int!
+  headshotRate:     Float!
+  killDeathRatio:   Float!
+  killsPerMatch:    Float!
+}
+
+type MatchParticipant {
+  player: Player!
+  stats:  PlayerStats!
+}
+
+type Match {
 	id:              ID!
-	server:          String!
+	server:          String
 	gamemode:        String!
 	mapgroup:        String!
 	mapfullname:     String!
@@ -46,19 +63,14 @@ type Match  {
 	rounds:          Int!
 	start:           Time!
 	end:             Time!
-	duration:        Time!
+	durationSeconds: Int!
 	completed:       Boolean!
-	# playersbyname:   map[String]*player
-	# playersbyid:     map[String]*player
+	participants:    [MatchParticipant!]!
 }
-
-
-
 
 type Query {
-  players: [Player!]!
-  player(id: ID!): Player!
-  matches: [Match!]!
+  players(limit: Int! = 50, offset: Int! = 0): [Player!]!
+  player(id: ID!): Player
+  matches(limit: Int! = 50, offset: Int! = 0): [Match!]!
+  match(id: ID!): Match
 }
-
-

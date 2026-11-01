@@ -45,6 +45,14 @@ eloupd
 .zed/
 .fleet/
 
+#OSX stuff
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+
 #binaries and generated stuff
 bin/
 release/
