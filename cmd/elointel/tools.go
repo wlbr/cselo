@@ -8,22 +8,8 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/analytics"
 )
-
-type statisticsSource interface {
-	SearchPlayers(context.Context, string, int, int) ([]*elo.Player, error)
-	FindPlayerByID(context.Context, int64) (*elo.Player, error)
-	GetPlayerStats(context.Context, int64) (*elo.PlayerStats, error)
-	GetMatches(context.Context, int, int) ([]*elo.Match, error)
-	GetMatchesForPeriod(context.Context, time.Time, time.Time, int, int) ([]*elo.Match, error)
-	GetMatchByID(context.Context, int64) (*elo.Match, error)
-	GetMatchParticipants(context.Context, int64) ([]*elo.MatchParticipant, error)
-	GetPlayerStatsForPeriod(context.Context, int64, time.Time, time.Time) (*elo.PlayerStats, error)
-	GetPlayerResultsForPeriod(context.Context, time.Time, time.Time) ([]*elo.PlayerResult, error)
-	GetHeadToHeadForPeriod(context.Context, int64, int64, time.Time, time.Time) (*elo.HeadToHeadStats, error)
-	GetWeaponStatsForPeriod(context.Context, int64, time.Time, time.Time) ([]*elo.WeaponStats, error)
-	GetMapStatsForPeriod(context.Context, int64, time.Time, time.Time) ([]*elo.MapStats, error)
-}
 
 type searchPlayersInput struct {
 	Name   string `json:"name" jsonschema:"Player name or a distinctive fragment of it"`
@@ -43,8 +29,8 @@ type searchPlayersOutput struct {
 
 type playerProfileInput struct {
 	PlayerID  string `json:"player_id" jsonschema:"Numeric cselo player ID"`
-	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format; must be supplied with end_date"`
-	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format; must be supplied with start_date"`
+	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format"`
+	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format"`
 }
 
 type playerStats struct {
@@ -68,8 +54,8 @@ type playerProfileOutput struct {
 }
 
 type listMatchesInput struct {
-	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format; must be supplied with end_date"`
-	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format; must be supplied with start_date"`
+	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format"`
+	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format"`
 	Limit     int    `json:"limit,omitempty" jsonschema:"Maximum number of matches from 1 to 100; defaults to 20"`
 	Offset    int    `json:"offset,omitempty" jsonschema:"Zero-based result offset; defaults to 0"`
 }
@@ -105,8 +91,8 @@ type matchReportOutput struct {
 
 type playerPeriodInput struct {
 	PlayerID  string `json:"player_id" jsonschema:"Numeric cselo player ID"`
-	StartDate string `json:"start_date" jsonschema:"First included UTC date in YYYY-MM-DD format"`
-	EndDate   string `json:"end_date" jsonschema:"Last included UTC date in YYYY-MM-DD format"`
+	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format"`
+	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format"`
 }
 
 type playerPeriodOutput struct {
@@ -115,8 +101,8 @@ type playerPeriodOutput struct {
 }
 
 type playerResultsInput struct {
-	StartDate string `json:"start_date" jsonschema:"First included UTC date in YYYY-MM-DD format"`
-	EndDate   string `json:"end_date" jsonschema:"Last included UTC date in YYYY-MM-DD format"`
+	StartDate string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format"`
+	EndDate   string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format"`
 }
 
 type dailyPlayerResultsInput struct {
@@ -129,21 +115,21 @@ type playerResult struct {
 }
 
 type playerResultsOutput struct {
-	StartDate string         `json:"start_date"`
-	EndDate   string         `json:"end_date"`
+	StartDate string         `json:"start_date,omitempty"`
+	EndDate   string         `json:"end_date,omitempty"`
 	Results   []playerResult `json:"results"`
 }
 
 type headToHeadInput struct {
 	FirstPlayerID  string `json:"first_player_id" jsonschema:"Numeric cselo player ID for the first player"`
 	SecondPlayerID string `json:"second_player_id" jsonschema:"Numeric cselo player ID for the second player"`
-	StartDate      string `json:"start_date" jsonschema:"First included UTC date in YYYY-MM-DD format"`
-	EndDate        string `json:"end_date" jsonschema:"Last included UTC date in YYYY-MM-DD format"`
+	StartDate      string `json:"start_date,omitempty" jsonschema:"Optional first included UTC date in YYYY-MM-DD format"`
+	EndDate        string `json:"end_date,omitempty" jsonschema:"Optional last included UTC date in YYYY-MM-DD format"`
 }
 
 type headToHeadOutput struct {
-	StartDate       string        `json:"start_date"`
-	EndDate         string        `json:"end_date"`
+	StartDate       string        `json:"start_date,omitempty"`
+	EndDate         string        `json:"end_date,omitempty"`
 	FirstPlayer     playerSummary `json:"first_player"`
 	SecondPlayer    playerSummary `json:"second_player"`
 	FirstKills      int           `json:"first_kills"`
@@ -154,8 +140,8 @@ type headToHeadOutput struct {
 
 type weaponStatsOutput struct {
 	Player    playerSummary `json:"player"`
-	StartDate string        `json:"start_date"`
-	EndDate   string        `json:"end_date"`
+	StartDate string        `json:"start_date,omitempty"`
+	EndDate   string        `json:"end_date,omitempty"`
 	Weapons   []weaponStat  `json:"weapons"`
 }
 
@@ -167,8 +153,8 @@ type weaponStat struct {
 
 type mapStatsOutput struct {
 	Player    playerSummary `json:"player"`
-	StartDate string        `json:"start_date"`
-	EndDate   string        `json:"end_date"`
+	StartDate string        `json:"start_date,omitempty"`
+	EndDate   string        `json:"end_date,omitempty"`
 	Maps      []mapStat     `json:"maps"`
 }
 
@@ -181,8 +167,8 @@ type mapStat struct {
 	Headshots int    `json:"headshots"`
 }
 
-func registerTools(server *mcp.Server, source statisticsSource) {
-	tools := &statsTools{source: source}
+func registerTools(server *mcp.Server, service *analytics.Service) {
+	tools := &statsTools{source: service}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "search_players",
 		Description: "Find Counter-Strike players by name before retrieving player statistics.",
@@ -201,7 +187,7 @@ func registerTools(server *mcp.Server, source statisticsSource) {
 	}, tools.getMatchReport)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_player_period_stats",
-		Description: "Get one player's statistics for an inclusive date range. Use search_players first when the player ID is unknown.",
+		Description: "Get one player's statistics for an optional inclusive date range, or all time. Use search_players first when the player ID is unknown.",
 	}, tools.getPlayerPeriodStats)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_daily_player_results",
@@ -209,24 +195,24 @@ func registerTools(server *mcp.Server, source statisticsSource) {
 	}, tools.getDailyPlayerResults)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_player_results_for_period",
-		Description: "Get the player-results table for an inclusive UTC date range, ranked by kills.",
+		Description: "Get the player-results table for an optional inclusive UTC date range, or all time, ranked by kills.",
 	}, tools.getPlayerResultsForPeriod)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_head_to_head",
-		Description: "Compare two players over an inclusive UTC date range: how many times the first killed the second and vice versa, including headshots. Use search_players first when IDs are unknown.",
+		Description: "Compare two players over an optional inclusive UTC date range, or all time: how many times each killed the other, including headshots.",
 	}, tools.getHeadToHead)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_player_weapon_stats",
-		Description: "Get a player's weapon kill and headshot breakdown for an inclusive UTC date range.",
+		Description: "Get a player's weapon kill and headshot breakdown for an optional inclusive UTC date range, or all time.",
 	}, tools.getPlayerWeaponStats)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_player_map_stats",
-		Description: "Get a player's match count, kills, deaths, assists, and headshots by map for an inclusive UTC date range.",
+		Description: "Get a player's match count, kills, deaths, assists, and headshots by map for an optional inclusive UTC date range, or all time.",
 	}, tools.getPlayerMapStats)
 }
 
 type statsTools struct {
-	source statisticsSource
+	source *analytics.Service
 }
 
 func (t *statsTools) searchPlayers(ctx context.Context, _ *mcp.CallToolRequest, input searchPlayersInput) (*mcp.CallToolResult, searchPlayersOutput, error) {
@@ -266,12 +252,12 @@ func (t *statsTools) getPlayerProfile(ctx context.Context, _ *mcp.CallToolReques
 	if player == nil {
 		return nil, playerProfileOutput{}, fmt.Errorf("player %d was not found", id)
 	}
-	start, end, hasRange, err := parseOptionalDateRange(input.StartDate, input.EndDate)
+	start, end, err := analytics.ParseDateRange(input.StartDate, input.EndDate)
 	if err != nil {
 		return nil, playerProfileOutput{}, err
 	}
 	var stats *elo.PlayerStats
-	if hasRange {
+	if start != nil || end != nil {
 		stats, err = t.source.GetPlayerStatsForPeriod(ctx, id, start, end)
 	} else {
 		stats, err = t.source.GetPlayerStats(ctx, id)
@@ -283,8 +269,8 @@ func (t *statsTools) getPlayerProfile(ctx context.Context, _ *mcp.CallToolReques
 		playerSummary
 		Stats playerStats `json:"stats"`
 	}{playerSummary: newPlayerSummary(player), Stats: newPlayerStats(stats)},
-		StartDate: formatRangeDate(start, hasRange),
-		EndDate:   formatRangeEndDate(end, hasRange),
+		StartDate: input.StartDate,
+		EndDate:   input.EndDate,
 	}, nil
 }
 
@@ -296,12 +282,12 @@ func (t *statsTools) listMatches(ctx context.Context, _ *mcp.CallToolRequest, in
 	if err := validateOffset(input.Offset); err != nil {
 		return nil, listMatchesOutput{}, err
 	}
-	start, end, hasRange, err := parseOptionalDateRange(input.StartDate, input.EndDate)
+	start, end, err := analytics.ParseDateRange(input.StartDate, input.EndDate)
 	if err != nil {
 		return nil, listMatchesOutput{}, err
 	}
 	var matches []*elo.Match
-	if hasRange {
+	if start != nil || end != nil {
 		matches, err = t.source.GetMatchesForPeriod(ctx, start, end, limit, input.Offset)
 	} else {
 		matches, err = t.source.GetMatches(ctx, limit, input.Offset)
@@ -314,8 +300,8 @@ func (t *statsTools) listMatches(ctx context.Context, _ *mcp.CallToolRequest, in
 		result = append(result, newMatchSummary(match))
 	}
 	return nil, listMatchesOutput{
-		StartDate: formatRangeDate(start, hasRange),
-		EndDate:   formatRangeEndDate(end, hasRange),
+		StartDate: input.StartDate,
+		EndDate:   input.EndDate,
 		Matches:   result,
 	}, nil
 }
@@ -368,7 +354,10 @@ func (t *statsTools) getPlayerPeriodStats(ctx context.Context, _ *mcp.CallToolRe
 }
 
 func (t *statsTools) getDailyPlayerResults(ctx context.Context, _ *mcp.CallToolRequest, input dailyPlayerResultsInput) (*mcp.CallToolResult, playerResultsOutput, error) {
-	start, end, err := parseDateRange(input.Date, input.Date)
+	if input.Date == "" {
+		return nil, playerResultsOutput{}, fmt.Errorf("date is required")
+	}
+	start, end, err := analytics.ParseDateRange(input.Date, input.Date)
 	if err != nil {
 		return nil, playerResultsOutput{}, err
 	}
@@ -376,7 +365,7 @@ func (t *statsTools) getDailyPlayerResults(ctx context.Context, _ *mcp.CallToolR
 }
 
 func (t *statsTools) getPlayerResultsForPeriod(ctx context.Context, _ *mcp.CallToolRequest, input playerResultsInput) (*mcp.CallToolResult, playerResultsOutput, error) {
-	start, end, err := parseDateRange(input.StartDate, input.EndDate)
+	start, end, err := analytics.ParseDateRange(input.StartDate, input.EndDate)
 	if err != nil {
 		return nil, playerResultsOutput{}, err
 	}
@@ -406,7 +395,7 @@ func (t *statsTools) getHeadToHead(ctx context.Context, _ *mcp.CallToolRequest, 
 	if second == nil {
 		return nil, headToHeadOutput{}, fmt.Errorf("player %d was not found", secondID)
 	}
-	start, end, err := parseDateRange(input.StartDate, input.EndDate)
+	start, end, err := analytics.ParseDateRange(input.StartDate, input.EndDate)
 	if err != nil {
 		return nil, headToHeadOutput{}, err
 	}
@@ -415,8 +404,8 @@ func (t *statsTools) getHeadToHead(ctx context.Context, _ *mcp.CallToolRequest, 
 		return nil, headToHeadOutput{}, err
 	}
 	return nil, headToHeadOutput{
-		StartDate:       start.Format(time.DateOnly),
-		EndDate:         end.AddDate(0, 0, -1).Format(time.DateOnly),
+		StartDate:       input.StartDate,
+		EndDate:         input.EndDate,
 		FirstPlayer:     newPlayerSummary(first),
 		SecondPlayer:    newPlayerSummary(second),
 		FirstKills:      stats.FirstKills,
@@ -437,8 +426,8 @@ func (t *statsTools) getPlayerWeaponStats(ctx context.Context, _ *mcp.CallToolRe
 	}
 	result := weaponStatsOutput{
 		Player:    newPlayerSummary(player),
-		StartDate: start.Format(time.DateOnly),
-		EndDate:   end.AddDate(0, 0, -1).Format(time.DateOnly),
+		StartDate: input.StartDate,
+		EndDate:   input.EndDate,
 		Weapons:   make([]weaponStat, 0, len(stats)),
 	}
 	for _, stat := range stats {
@@ -460,8 +449,8 @@ func (t *statsTools) getPlayerMapStats(ctx context.Context, _ *mcp.CallToolReque
 	}
 	result := mapStatsOutput{
 		Player:    newPlayerSummary(player),
-		StartDate: start.Format(time.DateOnly),
-		EndDate:   end.AddDate(0, 0, -1).Format(time.DateOnly),
+		StartDate: input.StartDate,
+		EndDate:   input.EndDate,
 		Maps:      make([]mapStat, 0, len(stats)),
 	}
 	for _, stat := range stats {
@@ -473,14 +462,14 @@ func (t *statsTools) getPlayerMapStats(ctx context.Context, _ *mcp.CallToolReque
 	return nil, result, nil
 }
 
-func (t *statsTools) playerResults(ctx context.Context, start, end time.Time) (*mcp.CallToolResult, playerResultsOutput, error) {
+func (t *statsTools) playerResults(ctx context.Context, start, end *time.Time) (*mcp.CallToolResult, playerResultsOutput, error) {
 	results, err := t.source.GetPlayerResultsForPeriod(ctx, start, end)
 	if err != nil {
 		return nil, playerResultsOutput{}, err
 	}
 	output := playerResultsOutput{
-		StartDate: start.Format(time.DateOnly),
-		EndDate:   end.AddDate(0, 0, -1).Format(time.DateOnly),
+		StartDate: formatRangeDate(start),
+		EndDate:   formatRangeEndDate(end),
 		Results:   make([]playerResult, 0, len(results)),
 	}
 	for _, result := range results {
@@ -492,21 +481,21 @@ func (t *statsTools) playerResults(ctx context.Context, start, end time.Time) (*
 	return nil, output, nil
 }
 
-func (t *statsTools) playerAndPeriod(ctx context.Context, playerID, startDate, endDate string) (*elo.Player, int64, time.Time, time.Time, error) {
+func (t *statsTools) playerAndPeriod(ctx context.Context, playerID, startDate, endDate string) (*elo.Player, int64, *time.Time, *time.Time, error) {
 	id, err := parseID(playerID, "player_id")
 	if err != nil {
-		return nil, 0, time.Time{}, time.Time{}, err
+		return nil, 0, nil, nil, err
 	}
 	player, err := t.source.FindPlayerByID(ctx, id)
 	if err != nil {
-		return nil, 0, time.Time{}, time.Time{}, err
+		return nil, 0, nil, nil, err
 	}
 	if player == nil {
-		return nil, 0, time.Time{}, time.Time{}, fmt.Errorf("player %d was not found", id)
+		return nil, 0, nil, nil, fmt.Errorf("player %d was not found", id)
 	}
-	start, end, err := parseDateRange(startDate, endDate)
+	start, end, err := analytics.ParseDateRange(startDate, endDate)
 	if err != nil {
-		return nil, 0, time.Time{}, time.Time{}, err
+		return nil, 0, nil, nil, err
 	}
 	return player, id, start, end, nil
 }
@@ -519,41 +508,15 @@ func parseID(value, name string) (int64, error) {
 	return id, nil
 }
 
-func parseDateRange(startDate, endDate string) (time.Time, time.Time, error) {
-	start, err := time.Parse(time.DateOnly, startDate)
-	if err != nil {
-		return time.Time{}, time.Time{}, fmt.Errorf("start_date must be YYYY-MM-DD: %w", err)
-	}
-	end, err := time.Parse(time.DateOnly, endDate)
-	if err != nil {
-		return time.Time{}, time.Time{}, fmt.Errorf("end_date must be YYYY-MM-DD: %w", err)
-	}
-	if end.Before(start) {
-		return time.Time{}, time.Time{}, fmt.Errorf("end_date must not be before start_date")
-	}
-	return start, end.AddDate(0, 0, 1), nil
-}
-
-func parseOptionalDateRange(startDate, endDate string) (time.Time, time.Time, bool, error) {
-	if startDate == "" && endDate == "" {
-		return time.Time{}, time.Time{}, false, nil
-	}
-	start, end, err := parseDateRange(startDate, endDate)
-	if err != nil {
-		return time.Time{}, time.Time{}, false, err
-	}
-	return start, end, true, nil
-}
-
-func formatRangeDate(start time.Time, hasRange bool) string {
-	if !hasRange {
+func formatRangeDate(start *time.Time) string {
+	if start == nil {
 		return ""
 	}
 	return start.Format(time.DateOnly)
 }
 
-func formatRangeEndDate(end time.Time, hasRange bool) string {
-	if !hasRange {
+func formatRangeEndDate(end *time.Time) string {
+	if end == nil {
 		return ""
 	}
 	return end.AddDate(0, 0, -1).Format(time.DateOnly)

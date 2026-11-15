@@ -32,7 +32,7 @@ type Player {
   name:      String!
   steamid:   String!
   profileid: String!
-  stats:     PlayerStats!
+  stats(startDate: String, endDate: String): PlayerStats!
 }
 
 type PlayerStats {
@@ -71,6 +71,6 @@ type Match {
 type Query {
   players(name: String, limit: Int! = 50, offset: Int! = 0): [Player!]!
   player(id: ID!): Player
-  matches(limit: Int! = 50, offset: Int! = 0): [Match!]!
+  matches(limit: Int! = 50, offset: Int! = 0, startDate: String, endDate: String): [Match!]!
   match(id: ID!): Match
 }

@@ -9,7 +9,7 @@ clean:
 	@echo Running clean job...
 	rm -f coverage.txt
 	rm -rf bin/ release/
-	rm -f main eloudp elogql csscores cselo.tgz cselo.zip cselo.dmg
+	rm -f main eloudp elointel csscores cselo.tgz cselo.zip cselo.dmg
 
 dep:
 	go install github.com/99designs/gqlgen
@@ -29,8 +29,7 @@ build: dep generate
 
 run: generate
 #	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini
-#	go run -ldflags "$(LINKERFLAGS)" cmd/elogql/server.go -cfg cselo-local.ini
-	go run -ldflags "$(LINKERFLAGS)" ./cmd/elomcp -cfg cselo-local.ini
+	go run -ldflags "$(LINKERFLAGS)" ./cmd/elointel -cfg cselo-local.ini
 
 test: recreatetables
 	go run -ldflags "$(LINKERFLAGS)" cmd/elohttp/main.go -cfg cselo-local.ini -import data/test.log

@@ -22,11 +22,11 @@ ORDER BY matchstart DESC, id DESC
 LIMIT $1 OFFSET $2`, limit, offset)
 }
 
-func (s *Postgres) GetMatchesForPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*elo.Match, error) {
+func (s *Postgres) GetMatchesForPeriod(ctx context.Context, start, end *time.Time, limit, offset int) ([]*elo.Match, error) {
 	return s.getMatches(ctx, `
 SELECT `+matchColumns+`
 FROM matches
-WHERE matchstart >= $1 AND matchstart < $2
+WHERE ($1::timestamp IS NULL OR matchstart >= $1) AND ($2::timestamp IS NULL OR matchstart < $2)
 ORDER BY matchstart DESC, id DESC
 LIMIT $3 OFFSET $4`, start, end, limit, offset)
 }

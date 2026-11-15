@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
 		ProfileID func(childComplexity int) int
-		Stats     func(childComplexity int) int
+		Stats     func(childComplexity int, startDate *string, endDate *string) int
 		SteamID   func(childComplexity int) int
 	}
 
@@ -85,7 +85,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Match   func(childComplexity int, id string) int
-		Matches func(childComplexity int, limit int, offset int) int
+		Matches func(childComplexity int, limit int, offset int, startDate *string, endDate *string) int
 		Player  func(childComplexity int, id string) int
 		Players func(childComplexity int, name *string, limit int, offset int) int
 	}
@@ -103,12 +103,12 @@ type MatchResolver interface {
 	Participants(ctx context.Context, obj *elo.Match) ([]*elo.MatchParticipant, error)
 }
 type PlayerResolver interface {
-	Stats(ctx context.Context, obj *elo.Player) (*elo.PlayerStats, error)
+	Stats(ctx context.Context, obj *elo.Player, startDate *string, endDate *string) (*elo.PlayerStats, error)
 }
 type QueryResolver interface {
 	Players(ctx context.Context, name *string, limit int, offset int) ([]*elo.Player, error)
 	Player(ctx context.Context, id string) (*elo.Player, error)
-	Matches(ctx context.Context, limit int, offset int) ([]*elo.Match, error)
+	Matches(ctx context.Context, limit int, offset int, startDate *string, endDate *string) ([]*elo.Match, error)
 	Match(ctx context.Context, id string) (*elo.Match, error)
 }
 
@@ -258,7 +258,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			break
 		}
 
-		return e.ComplexityRoot.Player.Stats(childComplexity), true
+		args, err := ec.field_Player_stats_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Player.Stats(childComplexity, args["startDate"].(*string), args["endDate"].(*string)), true
 	case "Player.steamid":
 		if e.ComplexityRoot.Player.SteamID == nil {
 			break
@@ -336,7 +341,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.Matches(childComplexity, args["limit"].(int), args["offset"].(int)), true
+		return e.ComplexityRoot.Query.Matches(childComplexity, args["limit"].(int), args["offset"].(int), args["startDate"].(*string), args["endDate"].(*string)), true
 	case "Query.player":
 		if e.ComplexityRoot.Query.Player == nil {
 			break
@@ -463,7 +468,7 @@ type Player {
   name:      String!
   steamid:   String!
   profileid: String!
-  stats:     PlayerStats!
+  stats(startDate: String, endDate: String): PlayerStats!
 }
 
 type PlayerStats {
@@ -502,7 +507,7 @@ type Match {
 type Query {
   players(name: String, limit: Int! = 50, offset: Int! = 0): [Player!]!
   player(id: ID!): Player
-  matches(limit: Int! = 50, offset: Int! = 0): [Match!]!
+  matches(limit: Int! = 50, offset: Int! = 0, startDate: String, endDate: String): [Match!]!
   match(id: ID!): Match
 }
 `, BuiltIn: false},
@@ -711,6 +716,28 @@ func (ec *executionContext) childFields___Type(ctx context.Context, field graphq
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Player_stats_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "startDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "endDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -758,6 +785,22 @@ func (ec *executionContext) field_Query_matches_args(ctx context.Context, rawArg
 		return nil, err
 	}
 	args["offset"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "startDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "endDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg3
 	return args, nil
 }
 
@@ -1398,7 +1441,8 @@ func (ec *executionContext) _Player_stats(ctx context.Context, field graphql.Col
 			return ec.fieldContext_Player_stats(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Player().Stats(ctx, obj)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Player().Stats(ctx, obj, fc.Args["startDate"].(*string), fc.Args["endDate"].(*string))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *elo.PlayerStats) graphql.Marshaler {
@@ -1408,7 +1452,7 @@ func (ec *executionContext) _Player_stats(ctx context.Context, field graphql.Col
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Player_stats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Player_stats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Player",
 		Field:      field,
@@ -1417,6 +1461,17 @@ func (ec *executionContext) fieldContext_Player_stats(_ context.Context, field g
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_PlayerStats(ctx, field)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Player_stats_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1703,7 +1758,7 @@ func (ec *executionContext) _Query_matches(ctx context.Context, field graphql.Co
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Matches(ctx, fc.Args["limit"].(int), fc.Args["offset"].(int))
+			return ec.Resolvers.Query().Matches(ctx, fc.Args["limit"].(int), fc.Args["offset"].(int), fc.Args["startDate"].(*string), fc.Args["endDate"].(*string))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*elo.Match) graphql.Marshaler {

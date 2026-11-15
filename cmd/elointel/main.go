@@ -4,16 +4,20 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/wlbr/commons/log"
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/aggregators/graph"
+	"github.com/wlbr/cselo/elo/aggregators/graph/generated"
+	"github.com/wlbr/cselo/elo/analytics"
 	"github.com/wlbr/cselo/elo/sources/postgresql"
 )
 
@@ -39,44 +43,59 @@ func main() {
 	if err != nil {
 		log.Fatal("Error opening PostgreSQL connection: %v", err)
 	}
-	server := newMCPServer(config.GitVersion, source)
+	service := analytics.New(source)
+	mux, err := newHandler(config.GitVersion, service, config.MCP.BasicAuthUser, config.MCP.BasicAuthPassword)
+	if err != nil {
+		log.Fatal("Invalid server configuration: %v", err)
+	}
+	if config.MCP.Path != "" && config.MCP.Path != "/mcp" {
+		log.Fatal("MCP.Path must be /mcp for elointel")
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	runHTTPServer(ctx, server, config.MCP.Port, config.MCP.Path, config.MCP.BasicAuthUser, config.MCP.BasicAuthPassword)
+	runHTTPServer(ctx, mux, config.MCP.Host, config.MCP.Port)
 }
 
-func newMCPServer(version string, source statisticsSource) *mcp.Server {
+func newMCPServer(version string, service *analytics.Service) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "cselo-stats",
 		Version: version,
 	}, nil)
-	registerTools(server, source)
+	registerTools(server, service)
 	return server
 }
 
-func runHTTPServer(ctx context.Context, server *mcp.Server, port, path, basicAuthUser, basicAuthPassword string) {
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
+func newHandler(version string, service *analytics.Service, basicAuthUser, basicAuthPassword string) (http.Handler, error) {
 	if (basicAuthUser == "") != (basicAuthPassword == "") {
-		log.Fatal("MCP BasicAuthUser and BasicAuthPassword must either both be set or both be empty")
+		return nil, fmt.Errorf("MCP BasicAuthUser and BasicAuthPassword must either both be set or both be empty")
 	}
 
 	mux := http.NewServeMux()
+	server := newMCPServer(version, service)
 	var handler http.Handler = mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return server
 	}, &mcp.StreamableHTTPOptions{Stateless: true})
 	if basicAuthUser != "" {
 		handler = basicAuth(handler, basicAuthUser, basicAuthPassword)
 	}
-	mux.Handle(path, handler)
-	mux.HandleFunc("/healthz", func(writer http.ResponseWriter, _ *http.Request) {
-		writer.WriteHeader(http.StatusNoContent)
-	})
+	mux.Handle("/mcp", handler)
+	mux.Handle("/graphql", graphqlHandler(service))
+	return mux, nil
+}
 
+func graphqlHandler(service *analytics.Service) http.Handler {
+	return handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+		Resolvers: &graph.Resolver{Analytics: service},
+	}))
+}
+
+func runHTTPServer(ctx context.Context, mux http.Handler, host, port string) {
+	if host == "" {
+		host = "localhost"
+	}
 	httpServer := &http.Server{
-		Addr:              ":" + port,
-		Handler:           elo.LogHTTPRequests("elomcp", mux),
+		Addr:              net.JoinHostPort(host, port),
+		Handler:           elo.LogHTTPRequests("elointel", mux),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	go func() {
@@ -84,13 +103,13 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, port, path, basicAut
 		shutdownContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := httpServer.Shutdown(shutdownContext); err != nil {
-			log.Error("MCP HTTP server shutdown failed: %v", err)
+			log.Error("HTTP server shutdown failed: %v", err)
 		}
 	}()
 
-	log.Warn("Starting MCP HTTP server at http://%s%s", httpServer.Addr, path)
+	log.Warn("Starting HTTP server at http://%s (MCP: /mcp, GraphQL: /graphql)", httpServer.Addr)
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal("MCP HTTP server failed: %v", err)
+		log.Fatal("HTTP server failed: %v", err)
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/wlbr/cselo/elo"
 	"github.com/wlbr/cselo/elo/aggregators/graph/generated"
+	"github.com/wlbr/cselo/elo/analytics"
 )
 
 // Server is the resolver for the server field.
@@ -29,20 +30,27 @@ func (r *matchResolver) DurationSeconds(ctx context.Context, obj *elo.Match) (in
 
 // Participants is the resolver for the participants field.
 func (r *matchResolver) Participants(ctx context.Context, obj *elo.Match) ([]*elo.MatchParticipant, error) {
-	return r.Source.GetMatchParticipants(ctx, obj.ID())
+	return r.Analytics.GetMatchParticipants(ctx, obj.ID())
 }
 
 // Stats is the resolver for the stats field.
-func (r *playerResolver) Stats(ctx context.Context, obj *elo.Player) (*elo.PlayerStats, error) {
-	return r.Source.GetPlayerStats(ctx, obj.ID)
+func (r *playerResolver) Stats(ctx context.Context, obj *elo.Player, startDate *string, endDate *string) (*elo.PlayerStats, error) {
+	start, end, err := analytics.ParseDateRange(optionalDate(startDate), optionalDate(endDate))
+	if err != nil {
+		return nil, err
+	}
+	if start != nil || end != nil {
+		return r.Analytics.GetPlayerStatsForPeriod(ctx, obj.ID, start, end)
+	}
+	return r.Analytics.GetPlayerStats(ctx, obj.ID)
 }
 
 // Players is the resolver for the players field.
 func (r *queryResolver) Players(ctx context.Context, name *string, limit int, offset int) ([]*elo.Player, error) {
 	if name != nil {
-		return r.Source.SearchPlayers(ctx, *name, limit, offset)
+		return r.Analytics.SearchPlayers(ctx, *name, limit, offset)
 	}
-	return r.Source.GetPlayers(ctx, limit, offset)
+	return r.Analytics.GetPlayers(ctx, limit, offset)
 }
 
 // Player is the resolver for the player field.
@@ -51,12 +59,19 @@ func (r *queryResolver) Player(ctx context.Context, id string) (*elo.Player, err
 	if err != nil || intid < 1 {
 		return nil, fmt.Errorf("player id must be a positive integer")
 	}
-	return r.Source.FindPlayerByID(ctx, intid)
+	return r.Analytics.FindPlayerByID(ctx, intid)
 }
 
 // Matches is the resolver for the matches field.
-func (r *queryResolver) Matches(ctx context.Context, limit int, offset int) ([]*elo.Match, error) {
-	return r.Source.GetMatches(ctx, limit, offset)
+func (r *queryResolver) Matches(ctx context.Context, limit int, offset int, startDate *string, endDate *string) ([]*elo.Match, error) {
+	start, end, err := analytics.ParseDateRange(optionalDate(startDate), optionalDate(endDate))
+	if err != nil {
+		return nil, err
+	}
+	if start != nil || end != nil {
+		return r.Analytics.GetMatchesForPeriod(ctx, start, end, limit, offset)
+	}
+	return r.Analytics.GetMatches(ctx, limit, offset)
 }
 
 // Match is the resolver for the match field.
@@ -65,7 +80,7 @@ func (r *queryResolver) Match(ctx context.Context, id string) (*elo.Match, error
 	if err != nil || intid < 1 {
 		return nil, fmt.Errorf("match id must be a positive integer")
 	}
-	return r.Source.GetMatchByID(ctx, intid)
+	return r.Analytics.GetMatchByID(ctx, intid)
 }
 
 // Match returns generated.MatchResolver implementation.

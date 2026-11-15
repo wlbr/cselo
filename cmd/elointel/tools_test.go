@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/wlbr/cselo/elo"
+	"github.com/wlbr/cselo/elo/analytics"
 )
 
 func TestBasicAuth(t *testing.T) {
@@ -46,21 +47,15 @@ func TestBasicAuth(t *testing.T) {
 }
 
 func TestSearchPlayers(t *testing.T) {
-	tools := &statsTools{source: fakeStatisticsSource{
+	tools := &statsTools{source: analytics.New(fakeStatisticsSource{
 		players: []*elo.Player{{ID: 2, Name: "Jagger", SteamID: "STEAM_1:0:1"}},
-	}}
+	})}
 	_, result, err := tools.searchPlayers(context.Background(), nil, searchPlayersInput{Name: "Jagger"})
 	if err != nil {
 		t.Fatalf("searchPlayers returned error: %v", err)
 	}
 	if len(result.Players) != 1 || result.Players[0].Name != "Jagger" {
 		t.Fatalf("unexpected players: %+v", result.Players)
-	}
-}
-
-func TestParseOptionalDateRangeRequiresBothDates(t *testing.T) {
-	if _, _, _, err := parseOptionalDateRange("2026-10-01", ""); err == nil {
-		t.Fatal("parseOptionalDateRange returned nil error")
 	}
 }
 
@@ -73,14 +68,14 @@ func TestGetMatchReportRejectsInvalidID(t *testing.T) {
 }
 
 func TestNewMCPServerRegistersTools(t *testing.T) {
-	server := newMCPServer("test", fakeStatisticsSource{})
+	server := newMCPServer("test", analytics.New(fakeStatisticsSource{}))
 	if server == nil {
 		t.Fatal("newMCPServer returned nil")
 	}
 }
 
 func TestParseDateRangeIncludesBothDays(t *testing.T) {
-	start, end, err := parseDateRange("2026-10-01", "2026-10-03")
+	start, end, err := analytics.ParseDateRange("2026-10-01", "2026-10-03")
 	if err != nil {
 		t.Fatalf("parseDateRange returned error: %v", err)
 	}
@@ -93,13 +88,17 @@ func TestParseDateRangeIncludesBothDays(t *testing.T) {
 }
 
 func TestParseDateRangeRejectsReversedDates(t *testing.T) {
-	if _, _, err := parseDateRange("2026-10-03", "2026-10-01"); err == nil {
+	if _, _, err := analytics.ParseDateRange("2026-10-03", "2026-10-01"); err == nil {
 		t.Fatal("parseDateRange returned nil error")
 	}
 }
 
 type fakeStatisticsSource struct {
 	players []*elo.Player
+}
+
+func (s fakeStatisticsSource) GetPlayers(_ context.Context, _ int, _ int) ([]*elo.Player, error) {
+	return s.players, nil
 }
 
 func (s fakeStatisticsSource) SearchPlayers(_ context.Context, _ string, _ int, _ int) ([]*elo.Player, error) {
@@ -118,7 +117,7 @@ func (s fakeStatisticsSource) GetMatches(_ context.Context, _ int, _ int) ([]*el
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetMatchesForPeriod(_ context.Context, _, _ time.Time, _ int, _ int) ([]*elo.Match, error) {
+func (s fakeStatisticsSource) GetMatchesForPeriod(_ context.Context, _, _ *time.Time, _ int, _ int) ([]*elo.Match, error) {
 	return nil, nil
 }
 
@@ -130,22 +129,22 @@ func (s fakeStatisticsSource) GetMatchParticipants(_ context.Context, _ int64) (
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetPlayerStatsForPeriod(_ context.Context, _ int64, _, _ time.Time) (*elo.PlayerStats, error) {
+func (s fakeStatisticsSource) GetPlayerStatsForPeriod(_ context.Context, _ int64, _, _ *time.Time) (*elo.PlayerStats, error) {
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetPlayerResultsForPeriod(_ context.Context, _, _ time.Time) ([]*elo.PlayerResult, error) {
+func (s fakeStatisticsSource) GetPlayerResultsForPeriod(_ context.Context, _, _ *time.Time) ([]*elo.PlayerResult, error) {
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetHeadToHeadForPeriod(_ context.Context, _, _ int64, _, _ time.Time) (*elo.HeadToHeadStats, error) {
+func (s fakeStatisticsSource) GetHeadToHeadForPeriod(_ context.Context, _, _ int64, _, _ *time.Time) (*elo.HeadToHeadStats, error) {
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetWeaponStatsForPeriod(_ context.Context, _ int64, _, _ time.Time) ([]*elo.WeaponStats, error) {
+func (s fakeStatisticsSource) GetWeaponStatsForPeriod(_ context.Context, _ int64, _, _ *time.Time) ([]*elo.WeaponStats, error) {
 	return nil, nil
 }
 
-func (s fakeStatisticsSource) GetMapStatsForPeriod(_ context.Context, _ int64, _, _ time.Time) ([]*elo.MapStats, error) {
+func (s fakeStatisticsSource) GetMapStatsForPeriod(_ context.Context, _ int64, _, _ *time.Time) ([]*elo.MapStats, error) {
 	return nil, nil
 }
