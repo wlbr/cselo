@@ -14,6 +14,8 @@ func TestConfigReadsGraphQLAndMCPSections(t *testing.T) {
 Port = 8080
 [MCP]
 Port = 42821
+BasicAuthUser = mcp-user
+BasicAuthPassword = mcp-password
 `); err != nil {
 		t.Fatalf("ReadStringInto returned error: %v", err)
 	}
@@ -23,6 +25,12 @@ Port = 42821
 	}
 	if config.MCP.Port != "42821" {
 		t.Errorf("MCP.Port = %q, want %q", config.MCP.Port, "42821")
+	}
+	if config.MCP.BasicAuthUser != "mcp-user" {
+		t.Errorf("MCP.BasicAuthUser = %q, want %q", config.MCP.BasicAuthUser, "mcp-user")
+	}
+	if config.MCP.BasicAuthPassword != "mcp-password" {
+		t.Errorf("MCP.BasicAuthPassword = %q, want %q", config.MCP.BasicAuthPassword, "mcp-password")
 	}
 }
 
@@ -38,8 +46,5 @@ func TestConfigReadsServiceSectionsFromINI(t *testing.T) {
 	}, "\n"))
 	if err != nil {
 		t.Fatalf("ReadStringInto returned error: %v", err)
-	}
-	if config.MCP.Transport != "http" || config.MCP.Path != "/mcp" {
-		t.Fatalf("unexpected MCP config: %+v", config.MCP)
 	}
 }

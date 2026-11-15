@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"os"
@@ -41,17 +42,7 @@ func main() {
 	server := newMCPServer(config.GitVersion, source)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-
-	switch strings.ToLower(config.MCP.Transport) {
-	case "stdio":
-		if err := server.Run(ctx, &mcp.StdioTransport{}); err != nil {
-			log.Fatal("MCP server failed: %v", err)
-		}
-	case "http":
-		runHTTPServer(ctx, server, config.MCP.Host, config.MCP.Port, config.MCP.Path)
-	default:
-		log.Fatal("Unsupported MCP transport %q. Use stdio or http.", config.MCP.Transport)
-	}
+	runHTTPServer(ctx, server, config.MCP.Port, config.MCP.Path, config.MCP.BasicAuthUser, config.MCP.BasicAuthPassword)
 }
 
 func newMCPServer(version string, source statisticsSource) *mcp.Server {
@@ -63,21 +54,28 @@ func newMCPServer(version string, source statisticsSource) *mcp.Server {
 	return server
 }
 
-func runHTTPServer(ctx context.Context, server *mcp.Server, host, port, path string) {
+func runHTTPServer(ctx context.Context, server *mcp.Server, port, path, basicAuthUser, basicAuthPassword string) {
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
+	if (basicAuthUser == "") != (basicAuthPassword == "") {
+		log.Fatal("MCP BasicAuthUser and BasicAuthPassword must either both be set or both be empty")
+	}
 
 	mux := http.NewServeMux()
-	mux.Handle(path, mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+	var handler http.Handler = mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return server
-	}, &mcp.StreamableHTTPOptions{Stateless: true}))
+	}, &mcp.StreamableHTTPOptions{Stateless: true})
+	if basicAuthUser != "" {
+		handler = basicAuth(handler, basicAuthUser, basicAuthPassword)
+	}
+	mux.Handle(path, handler)
 	mux.HandleFunc("/healthz", func(writer http.ResponseWriter, _ *http.Request) {
 		writer.WriteHeader(http.StatusNoContent)
 	})
 
 	httpServer := &http.Server{
-		Addr:              host + ":" + port,
+		Addr:              ":" + port,
 		Handler:           elo.LogHTTPRequests("elomcp", mux),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
@@ -94,6 +92,20 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, host, port, path str
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("MCP HTTP server failed: %v", err)
 	}
+}
+
+func basicAuth(next http.Handler, username, password string) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		providedUsername, providedPassword, ok := request.BasicAuth()
+		if !ok ||
+			subtle.ConstantTimeCompare([]byte(providedUsername), []byte(username)) != 1 ||
+			subtle.ConstantTimeCompare([]byte(providedPassword), []byte(password)) != 1 {
+			writer.Header().Set("WWW-Authenticate", `Basic realm="cselo-mcp"`)
+			http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(writer, request)
+	})
 }
 
 func validateLimit(limit int) (int, error) {

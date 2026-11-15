@@ -86,6 +86,9 @@ Transport = stdio
 Host = localhost
 Port = 42821
 Path = /mcp
+; Optional: set both values to protect the MCP endpoint with HTTP Basic Auth.
+BasicAuthUser = mcp-user
+BasicAuthPassword = change-me
 ```
 
 `elogql` uses its own `[GraphQL] Port` setting (default `8080`):
@@ -115,8 +118,8 @@ For example, a desktop MCP client configuration can launch it with:
 }
 ```
 
-For a remote MCP endpoint, set `Transport = http` and configure `MCP.Port`.
-Its Streamable HTTP endpoint is served at `Path`
-(default `/mcp`) and `/healthz` returns `204 No Content`. The HTTP transport is
-unauthenticated; only expose it behind an authenticated HTTPS reverse proxy, or
-use it exclusively for the public statistics data.
+For a remote MCP endpoint, configure `MCP.Port`.
+Its Streamable HTTP endpoint is served at `Path` (default `/mcp`) and `/healthz`
+returns `204 No Content`. Set both `BasicAuthUser` and `BasicAuthPassword` to
+protect the MCP endpoint with HTTP Basic Auth; configure HTTPS at a reverse
+proxy because Basic Auth credentials are otherwise transmitted insecurely.

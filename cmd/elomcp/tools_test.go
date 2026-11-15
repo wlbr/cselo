@@ -2,11 +2,48 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/wlbr/cselo/elo"
 )
+
+func TestBasicAuth(t *testing.T) {
+	handler := basicAuth(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusNoContent)
+	}), "user", "password")
+
+	for _, test := range []struct {
+		name       string
+		username   string
+		password   string
+		statusCode int
+	}{
+		{name: "missing credentials", statusCode: http.StatusUnauthorized},
+		{name: "invalid username", username: "other", password: "password", statusCode: http.StatusUnauthorized},
+		{name: "invalid password", username: "user", password: "other", statusCode: http.StatusUnauthorized},
+		{name: "valid credentials", username: "user", password: "password", statusCode: http.StatusNoContent},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+			if test.username != "" || test.password != "" {
+				request.SetBasicAuth(test.username, test.password)
+			}
+			response := httptest.NewRecorder()
+
+			handler.ServeHTTP(response, request)
+
+			if response.Code != test.statusCode {
+				t.Errorf("status code = %d, want %d", response.Code, test.statusCode)
+			}
+			if test.statusCode == http.StatusUnauthorized && response.Header().Get("WWW-Authenticate") != `Basic realm="cselo-mcp"` {
+				t.Errorf("WWW-Authenticate = %q, want %q", response.Header().Get("WWW-Authenticate"), `Basic realm="cselo-mcp"`)
+			}
+		})
+	}
+}
 
 func TestSearchPlayers(t *testing.T) {
 	tools := &statsTools{source: fakeStatisticsSource{

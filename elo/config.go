@@ -44,10 +44,12 @@ type Config struct {
 		Port string
 	} `gcfg:"GraphQL"`
 	MCP struct {
-		Transport string
-		Host      string
-		Port      string
-		Path      string
+		Transport         string
+		Host              string
+		Port              string
+		Path              string
+		BasicAuthUser     string
+		BasicAuthPassword string
 	} `gcfg:"MCP"`
 }
 
@@ -59,6 +61,10 @@ func (c *Config) String() string {
 	tok := "\"\""
 	if c.InfluxDB.Token != "" {
 		tok = "***"
+	}
+	bapw := "\"\""
+	if c.MCP.BasicAuthPassword != "" {
+		bapw = "***"
 	}
 	return fmt.Sprintf("%s\tPort: %s\n"+
 		"\tForceoverWrite: %t\n"+
@@ -84,14 +90,14 @@ func (c *Config) String() string {
 		"\tGraphQL:\n"+
 		"\t\tPort: %s\n"+
 		"\tMCP:\n"+
-		"\t\tTransport: %s\n"+
-		"\t\tHost: %s\n"+
 		"\t\tPort: %s\n"+
-		"\t\tPath: %s\n",
+		"\t\tPath: %s\n"+
+		"\t\tBasicAuthUser: %s\n"+
+		"\t\tBasicAuthPW: %s\n",
 
 		c.CommonConfig, c.Elo.Port, c.Elo.ForceOverwrite, c.Elo.ExportDatafiles, c.Elo.OutputFileName, c.Elo.ImportFileName, c.Elo.RecorderFileName, c.Elo.DiscordWebhook, c.Elo.BufferSize,
 		c.ConfigFileName, c.PostgreSQL.Host, c.PostgreSQL.Port, c.PostgreSQL.Database, c.PostgreSQL.User, pw, c.InfluxDB.Host, c.InfluxDB.Port, tok, c.InfluxDB.Bucket, c.InfluxDB.Org,
-		c.GraphQL.Port, c.MCP.Transport, c.MCP.Host, c.MCP.Port, c.MCP.Path)
+		c.GraphQL.Port, c.MCP.Port, c.MCP.Path, c.MCP.BasicAuthUser, bapw)
 }
 
 func (cfg Config) CheckForceOverwrite() {
@@ -121,8 +127,8 @@ func (cfg *Config) FlagDefinition() {
 	flag.StringVar(&cfg.ConfigFileName, "cfg", "", "File to read (partial) config from.")
 	flag.IntVar(&cfg.Elo.BufferSize, "size", 5000, "Buffersize.")
 	flag.StringVar(&cfg.GraphQL.Port, "graphql-port", "8080", "Port for the GraphQL server.")
-	flag.StringVar(&cfg.MCP.Transport, "mcp-transport", "stdio", "MCP transport. [stdio|http].")
-	flag.StringVar(&cfg.MCP.Host, "mcp-host", "localhost", "Host for the MCP HTTP server.")
+	flag.StringVar(&cfg.MCP.BasicAuthUser, "mcp BasicAuth User", "", "MCP can be BascAuth protected.")
+	flag.StringVar(&cfg.MCP.BasicAuthPassword, "mcp BasicAuth Password", "", "MCP can be BascAuth protected.")
 	flag.StringVar(&cfg.MCP.Port, "mcp-port", "42821", "Port for the MCP HTTP server.")
 	flag.StringVar(&cfg.MCP.Path, "mcp-path", "/mcp", "Path for the MCP HTTP endpoint.")
 }
